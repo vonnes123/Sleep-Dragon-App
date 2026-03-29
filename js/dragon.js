@@ -131,6 +131,14 @@ const Dragon = (() => {
       await Progression.reload();
       renderHome();
     }
+    if (type === "setEntry") {
+      // Store globally so report-today can pick it up
+      window.activeEntryIndex = payload.index;
+      // If report-today is currently open, re-render it
+      if (window.PageControllers?.["report-today"]?.refresh) {
+        window.PageControllers["report-today"].refresh();
+      }
+    }
   };
 
   function getMode() {

@@ -43,6 +43,97 @@ window.PageControllers = {
     },
   },
 
+  "report-today": {
+    init() {
+      this.refresh();
+    },
+    refresh() {
+      const index = window.activeEntryIndex ?? 49;
+      const record = DataLoader.getAll()[index];
+      if (!record) return;
+
+      const h = Math.floor(record.asleep / 60);
+      const m = Math.round(record.asleep % 60);
+      const durEl = document.getElementById("today-duration");
+      if (durEl) durEl.textContent = `${h} hrs ${m} mins`;
+
+      function updateSubtitle() {
+        const subtitleEl = document.getElementById("chart-subtitle");
+        if (!subtitleEl) return;
+        subtitleEl.textContent = `Entry ${index + 1} · ${record.date} · Sleep stages simulated from nightly totals (NCBI NBK526132) · HRV avg ${record.sleepHRV}ms · BPM avg ${record.sleepBPM}`;
+      }
+
+      Charts.renderCombinedChart("chart-combined", record);
+      updateSubtitle();
+      Charts.renderDonutChart("chart-donut", record);
+
+      const toggleState = { stages: true, hrv: true, bpm: true };
+      const trackIds = {
+        "track-stages": "stages",
+        "track-hrv": "hrv",
+        "track-bpm": "bpm",
+      };
+
+      Object.entries(trackIds).forEach(([trackId, layerName]) => {
+        const track = document.getElementById(trackId);
+        if (!track) return;
+        track.addEventListener("click", () => {
+          toggleState[layerName] = !toggleState[layerName];
+          track.classList.toggle("on", toggleState[layerName]);
+          Charts.toggleLayer(
+            "chart-combined",
+            layerName,
+            toggleState[layerName],
+          );
+          updateSubtitle();
+        });
+      });
+
+      const scoreEl = document.getElementById("quality-score");
+      const messageEl = document.getElementById("quality-message");
+      if (scoreEl && record.efficiency != null) {
+        const score = Math.round(record.efficiency);
+        scoreEl.textContent = `${score}%`;
+        let msg = "";
+        if (score >= 90)
+          msg = `Sleep efficiency was ${score}% — excellent, keep it up!`;
+        else if (score >= 80)
+          msg = `Sleep efficiency was ${score}% — good night's rest.`;
+        else if (score >= 70)
+          msg = `Sleep efficiency was ${score}% — room to improve.`;
+        else
+          msg = `Sleep efficiency was ${score}% — try to get to bed earlier.`;
+        if (messageEl) messageEl.textContent = msg;
+      }
+
+      const legendEl = document.getElementById("today-legend");
+      if (legendEl) {
+        legendEl.innerHTML = `
+        <div style="display:flex; flex-wrap:wrap; gap:12px; font-size:11px;">
+          <div style="display:flex; align-items:center; gap:5px; color:#555;">
+            <div style="width:12px;height:12px;border-radius:2px;background:#1a3a6e;"></div> Deep
+          </div>
+          <div style="display:flex; align-items:center; gap:5px; color:#555;">
+            <div style="width:12px;height:12px;border-radius:2px;background:#6da8e0;"></div> REM
+          </div>
+          <div style="display:flex; align-items:center; gap:5px; color:#555;">
+            <div style="width:12px;height:12px;border-radius:2px;background:#a8c4f5;"></div> Light
+          </div>
+          <div style="display:flex; align-items:center; gap:5px; color:#555;">
+            <div style="width:12px;height:12px;border-radius:2px;background:#d0dff5;border:1px solid #ccc;"></div> Wake
+          </div>
+          <div style="display:flex; align-items:center; gap:5px; color:#2ecc71;">
+            <div style="width:18px;height:2px;background:#2ecc71;"></div> HRV (ms)
+          </div>
+          <div style="display:flex; align-items:center; gap:5px; color:#e05c7a;">
+            <div style="width:18px;height:2px;background:#e05c7a;"></div> BPM
+          </div>
+        </div>
+      `;
+      }
+    },
+  },
+
   "remote-control": {
     init() {
       const channel = new BroadcastChannel("dragon_control");
@@ -50,6 +141,38 @@ window.PageControllers = {
       document.getElementById("btnGiveFood").addEventListener("click", () => {
         const food = Progression.randomFood();
         channel.postMessage({ type: "addFood", payload: { food } });
+      });
+
+      // ── Day navigation ──
+      let currentEntry = 49; // 0-based, starts at entry 50
+      const total = DataLoader.getAll().length;
+      const entryLabel = document.getElementById("current-entry");
+
+      function updateEntryLabel() {
+        if (entryLabel)
+          entryLabel.textContent = `Entry ${currentEntry + 1} of ${total}`;
+      }
+
+      updateEntryLabel();
+
+      document.getElementById("btnPrevDay").addEventListener("click", () => {
+        if (currentEntry <= 0) return;
+        currentEntry--;
+        updateEntryLabel();
+        channel.postMessage({
+          type: "setEntry",
+          payload: { index: currentEntry },
+        });
+      });
+
+      document.getElementById("btnNextDay").addEventListener("click", () => {
+        if (currentEntry >= total - 1) return;
+        currentEntry++;
+        updateEntryLabel();
+        channel.postMessage({
+          type: "setEntry",
+          payload: { index: currentEntry },
+        });
       });
 
       document.querySelectorAll("[data-mode]").forEach((btn) => {
@@ -88,6 +211,11 @@ window.PageControllers = {
         );
         const res = await fetch(`pages/report-${tab}.html`);
         view.innerHTML = await res.text();
+
+        const controllerKey = `report-${tab}`;
+        if (window.PageControllers?.[controllerKey]) {
+          window.PageControllers[controllerKey].init();
+        }
       }
 
       tabs.forEach((t) =>

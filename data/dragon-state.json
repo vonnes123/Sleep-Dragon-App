@@ -1,19 +1,20 @@
 {
   "level": 6,
-  "xp": 205,
-  "stash": [
+  "xp": 255,
+  "stash": [],
+  "foodHistory": [
     {
       "id": 1774787175185.0647,
       "type": "pizza",
-      "quality": "rare"
+      "quality": "rare",
+      "eatenAt": 1774795137925
     },
     {
       "id": 1774787681411.4917,
       "type": "steak",
-      "quality": "rare"
-    }
-  ],
-  "foodHistory": [
+      "quality": "rare",
+      "eatenAt": 1774794901040
+    },
     {
       "id": 1774787681926.1204,
       "type": "fish",
@@ -73,18 +74,6 @@
       "type": "fish",
       "quality": "rare",
       "eatenAt": 1774787592600
-    },
-    {
-      "id": 1774787176934.965,
-      "type": "fish",
-      "quality": "rare",
-      "eatenAt": 1774787591645
-    },
-    {
-      "id": 1774787176229.3574,
-      "type": "steak",
-      "quality": "rare",
-      "eatenAt": 1774787590527
     }
   ]
 }

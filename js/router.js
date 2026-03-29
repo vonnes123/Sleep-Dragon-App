@@ -13,26 +13,32 @@ const Router = (() => {
 
   let current = null;
 
-  async function navigate(page) {
-        console.log("[Router] navigating to:", page);
-    if (!routes[page]) page = "home";
-    if (page === current) return;
-    current = page;
+async function navigate(page) {
+  if (!routes[page]) page = "home";
+  if (page === current) return;
+  current = page;
 
-    history.replaceState(null, "", `#${page}`);
+  history.replaceState(null, "", `#${page}`);
 
-    const res = await fetch(routes[page]);
-    const html = await res.text();
-    document.getElementById("view-container").innerHTML = html;
-
-    if (window.PageControllers?.[page]) {
-      window.PageControllers[page].init();
-    }
-
-    document.querySelectorAll(".nav-item").forEach((btn) => {
-      btn.classList.toggle("active", btn.dataset.page === page);
-    });
+  const canvas = document.getElementById("petCanvas");
+  if (canvas) {
+    canvas.style.opacity = "0";
+    canvas.style.display = "none";
+    document.body.appendChild(canvas);
   }
+
+  const res = await fetch(routes[page]);
+  const html = await res.text();
+  document.getElementById("view-container").innerHTML = html;
+
+  if (window.PageControllers?.[page]) {
+    window.PageControllers[page].init();
+  }
+
+  document.querySelectorAll(".nav-item").forEach((btn) => {
+    btn.classList.toggle("active", btn.dataset.page === page);
+  });
+}
 
   function init() {
     document.querySelectorAll(".nav-item[data-page]").forEach((btn) => {

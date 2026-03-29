@@ -12,6 +12,7 @@ const Progression = (() => {
     level: 1,
     xp: 0,
     stash: [],
+    foodHistory: [],
   };
 
   async function init() {
@@ -20,6 +21,7 @@ const Progression = (() => {
     state.level = data.level ?? 1;
     state.xp = data.xp ?? 0;
     state.stash = data.stash ?? [];
+    state.foodHistory = data.foodHistory ?? [];
   }
 
   async function reload() {
@@ -28,6 +30,7 @@ const Progression = (() => {
     state.level = data.level ?? 1;
     state.xp = data.xp ?? 0;
     state.stash = data.stash ?? [];
+    state.foodHistory = data.foodHistory ?? [];
   }
 
   async function save() {
@@ -67,7 +70,14 @@ const Progression = (() => {
 
   async function removeFoodFromStash(id) {
     const item = state.stash.find((f) => f.id === id);
+    if (!item) return null;
     state.stash = state.stash.filter((f) => f.id !== id);
+
+    // Log to history, keep last 12
+    state.foodHistory.unshift({ ...item, eatenAt: Date.now() });
+    if (state.foodHistory.length > 12)
+      state.foodHistory = state.foodHistory.slice(0, 12);
+
     await save();
     return item;
   }

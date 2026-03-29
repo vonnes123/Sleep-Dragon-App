@@ -133,6 +133,10 @@ const Dragon = (() => {
     }
   };
 
-  // Public API
-  return { init, stop, setMode, setAnimation, setIdle, ANIMS };
+  function getMode() {
+    return idleMode;
+  }
+
+  // in the return:
+  return { init, stop, setMode, getMode, setAnimation, setIdle, ANIMS };
 })();

@@ -1,46 +1,90 @@
 {
-  "level": 7,
-  "xp": 450,
+  "level": 6,
+  "xp": 205,
   "stash": [
     {
-      "id": 1774783649047.4155,
-      "type": "pizza",
-      "quality": "common"
-    },
-    {
-      "id": 1774783659897.909,
-      "type": "fish",
-      "quality": "common"
-    },
-    {
-      "id": 1774783660328.1458,
+      "id": 1774787175185.0647,
       "type": "pizza",
       "quality": "rare"
     },
     {
-      "id": 1774783660710.4006,
+      "id": 1774787681411.4917,
       "type": "steak",
-      "quality": "legendary"
+      "quality": "rare"
+    }
+  ],
+  "foodHistory": [
+    {
+      "id": 1774787681926.1204,
+      "type": "fish",
+      "quality": "rare",
+      "eatenAt": 1774788178517
     },
     {
-      "id": 1774783661004.4067,
+      "id": 1774787682892.0764,
+      "type": "steak",
+      "quality": "common",
+      "eatenAt": 1774787712085
+    },
+    {
+      "id": 1774787175874.0027,
       "type": "apple",
-      "quality": "common"
+      "quality": "common",
+      "eatenAt": 1774787707717
     },
     {
-      "id": 1774783661212.472,
-      "type": "steak",
-      "quality": "common"
+      "id": 1774787682295.0278,
+      "type": "apple",
+      "quality": "epic",
+      "eatenAt": 1774787689185
     },
     {
-      "id": 1774783661423.838,
+      "id": 1774787682505.4688,
+      "type": "pizza",
+      "quality": "legendary",
+      "eatenAt": 1774787688281
+    },
+    {
+      "id": 1774787682702.0078,
       "type": "fish",
-      "quality": "rare"
+      "quality": "epic",
+      "eatenAt": 1774787687189
     },
     {
-      "id": 1774783661636.432,
+      "id": 1774787683091.3645,
       "type": "steak",
-      "quality": "rare"
+      "quality": "legendary",
+      "eatenAt": 1774787685691
+    },
+    {
+      "id": 1774787683289.0723,
+      "type": "pizza",
+      "quality": "epic",
+      "eatenAt": 1774787684752
+    },
+    {
+      "id": 1774787176051.979,
+      "type": "fish",
+      "quality": "rare",
+      "eatenAt": 1774787679792
+    },
+    {
+      "id": 1774787176763.0698,
+      "type": "fish",
+      "quality": "rare",
+      "eatenAt": 1774787592600
+    },
+    {
+      "id": 1774787176934.965,
+      "type": "fish",
+      "quality": "rare",
+      "eatenAt": 1774787591645
+    },
+    {
+      "id": 1774787176229.3574,
+      "type": "steak",
+      "quality": "rare",
+      "eatenAt": 1774787590527
     }
   ]
 }

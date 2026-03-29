@@ -2,10 +2,20 @@ window.PageControllers = {
   home: {
     init() {
       const canvas = document.getElementById("petCanvas");
-      canvas.style.display = "block";
-      document.getElementById("dragon-slot").appendChild(canvas);
 
-      renderHome();
+      requestAnimationFrame(() => {
+        const slot = document.getElementById("dragon-slot");
+        if (canvas && slot) {
+          canvas.style.display = "block";
+          slot.appendChild(canvas);
+          requestAnimationFrame(() => {
+            canvas.style.opacity = "1";
+          });
+        }
+        renderHome();
+      });
+
+      if (!canvas) return;
 
       canvas.addEventListener("dragover", (e) => e.preventDefault());
 
@@ -27,6 +37,12 @@ window.PageControllers = {
     },
   },
 
+  "pet-vitals": {
+    init() {
+      renderPetVitals();
+    },
+  },
+
   "remote-control": {
     init() {
       const channel = new BroadcastChannel("dragon_control");
@@ -34,7 +50,6 @@ window.PageControllers = {
       document.getElementById("btnGiveFood").addEventListener("click", () => {
         const food = Progression.randomFood();
         channel.postMessage({ type: "addFood", payload: { food } });
-        console.log("[RC] requested food:", food);
       });
 
       document.querySelectorAll("[data-mode]").forEach((btn) => {
@@ -92,39 +107,25 @@ function renderHome() {
   const xpBar = document.getElementById("xp-bar");
   const foodGrid = document.getElementById("food-grid");
 
+  if (!levelLabel && !xpBar && !foodGrid) return;
+
   if (levelLabel)
     levelLabel.textContent = `Level ${level} — ${Math.round(pct)}% to next`;
   if (xpBar) xpBar.style.width = pct + "%";
 
   if (!foodGrid) return;
+  foodGrid.innerHTML = "";
 
   const qualities = Progression.getQualities();
 
-  // ── Remove items no longer in stash ──
-  Array.from(foodGrid.children).forEach((child) => {
-    const stillExists = stash.find((i) => String(i.id) === child.dataset.id);
-    if (!stillExists) {
-      child.style.transition = "transform 0.2s ease, opacity 0.2s ease";
-      child.style.transform = "scale(0)";
-      child.style.opacity = "0";
-      setTimeout(() => child.remove(), 200);
-    }
-  });
-
-  // ── Add new items not yet in the grid ──
   stash.forEach((item) => {
-    const existing = foodGrid.querySelector(`[data-id="${item.id}"]`);
-    if (existing) return; // already rendered, skip
-
     const q = qualities.find((q) => q.name === item.quality);
     const div = document.createElement("div");
     div.style.cssText = `
       display: flex; align-items: center; justify-content: center;
       cursor: grab;
-      width: 48px; height: 48px;
-      transform: scale(0);
-      opacity: 0;
-      transition: transform 0.25s cubic-bezier(0.175, 0.885, 0.32, 1.275), opacity 0.2s ease;
+      width: 48px;
+      height: 48px;
     `;
     div.draggable = true;
     div.dataset.id = item.id;
@@ -140,7 +141,6 @@ function renderHome() {
     `;
     div.appendChild(img);
 
-    // ── Mouse drag ──
     div.addEventListener("dragstart", (e) => {
       e.dataTransfer.setData("foodId", item.id);
       const ghost = div.cloneNode(true);
@@ -151,7 +151,6 @@ function renderHome() {
       setTimeout(() => document.body.removeChild(ghost), 0);
     });
 
-    // ── Touch drag ──
     let touchClone = null;
 
     div.addEventListener(
@@ -210,14 +209,96 @@ function renderHome() {
     });
 
     foodGrid.appendChild(div);
+  });
+}
 
-    // Trigger entrance animation on next frame
-    requestAnimationFrame(() => {
-      requestAnimationFrame(() => {
-        div.style.transform = "scale(1)";
-        div.style.opacity = "1";
-      });
-    });
+function renderPetVitals() {
+  const { level, foodHistory } = Progression.getState();
+  const qualities = Progression.getQualities();
+
+  const statusBox = document.getElementById("vitals-status-box");
+  const dragonImg = document.getElementById("vitals-dragon-img");
+  if (statusBox && dragonImg) {
+    const mode = Dragon.getMode();
+    const messages = {
+      normal: "Today Drago is feeling Normal",
+      tired: "Today Drago is feeling Tired",
+      energetic: "Today Drago is feeling Energetic",
+    };
+    statusBox.textContent = messages[mode] || messages.normal;
+    dragonImg.src = `assets/dragon/dragon-${mode || "normal"}.png`;
+  }
+
+  let pct = 0;
+  if (level >= 20) {
+    pct = 100;
+  } else if (level >= 10) {
+    pct = ((level - 10) / 10) * 100;
+  } else {
+    pct = ((level - 1) / 9) * 100;
+  }
+
+  const pctLabel = document.getElementById("evo-pct-label");
+  const fillRect = document.getElementById("evo-fill-rect");
+
+  if (pctLabel)
+    pctLabel.innerHTML = `${Math.round(pct)}<span style="font-size:16px;">%</span>`;
+  if (fillRect) {
+    const fillHeight = (pct / 100) * 160;
+    const y = 160 - fillHeight;
+    fillRect.setAttribute("y", y);
+    fillRect.setAttribute("height", fillHeight);
+  }
+
+  const tipEl = document.getElementById("vitals-tip");
+  if (tipEl) {
+    let tip = "";
+    if (level >= 20) {
+      tip =
+        "🎉 Your dragon has fully evolved! You're a sleep champion — keep it up!";
+    } else if (level >= 10) {
+      const remaining = 20 - level;
+      tip = `✨ Your dragon has evolved once! Just ${remaining} more level${remaining > 1 ? "s" : ""} until the final evolution. Better sleep means more food for Drago!`;
+    } else if (level >= 7) {
+      const remaining = 10 - level;
+      tip = `🔥 So close! Only ${remaining} more level${remaining > 1 ? "s" : ""} until your dragon evolves. Keep those sleep habits strong!`;
+    } else if (level >= 4) {
+      tip =
+        "😴 Your dragon is growing! Consistent sleep will help Drago reach the next evolution sooner than you think.";
+    } else {
+      tip =
+        "🌙 Your dragon's journey is just beginning. Good sleep tonight could bring Drago one step closer to evolving!";
+    }
+    tipEl.textContent = tip;
+  }
+
+  const grid = document.getElementById("food-history-grid");
+  const empty = document.getElementById("food-history-empty");
+  if (!grid) return;
+
+  grid.innerHTML = "";
+
+  if (foodHistory.length === 0) {
+    if (empty) empty.style.display = "block";
+    return;
+  }
+  if (empty) empty.style.display = "none";
+
+  foodHistory.forEach((item) => {
+    const q = qualities.find((q) => q.name === item.quality);
+    const div = document.createElement("div");
+    div.style.cssText =
+      "width:40px; height:40px; display:flex; align-items:center; justify-content:center;";
+    const img = document.createElement("img");
+    img.src = `assets/food/food_${item.type}.png`;
+    img.style.cssText = `
+      width: 100%; height: 100%;
+      object-fit: contain;
+      image-rendering: pixelated;
+      filter: drop-shadow(0 0 5px ${q.color});
+    `;
+    div.appendChild(img);
+    grid.appendChild(div);
   });
 }
 

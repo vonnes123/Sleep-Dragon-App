@@ -7,12 +7,16 @@ window.PageControllers = {
         const slot = document.getElementById("dragon-slot");
         if (canvas && slot) {
           canvas.style.display = "block";
+          canvas.style.opacity = "1";
           slot.appendChild(canvas);
-          requestAnimationFrame(() => {
-            canvas.style.opacity = "1";
-          });
         }
         renderHome();
+
+        if (window._pendingPopup) {
+          const { prevIndex, newIndex } = window._pendingPopup;
+          window._pendingPopup = null;
+          setTimeout(() => showSleepPopup(prevIndex, newIndex), 500);
+        }
       });
 
       if (!canvas) return;
@@ -24,14 +28,11 @@ window.PageControllers = {
         const id = parseFloat(e.dataTransfer.getData("foodId"));
         const item = await Progression.removeFoodFromStash(id);
         if (!item) return;
-
         const qualities = Progression.getQualities();
         const q = qualities.find((q) => q.name === item.quality);
-
         Dragon.setAnimation("chew", 2);
         const didLevelUp = await Progression.addXP(q.xp);
         if (didLevelUp) Dragon.setAnimation("level_up", 1);
-
         renderHome();
       });
     },
@@ -40,6 +41,124 @@ window.PageControllers = {
   "pet-vitals": {
     init() {
       renderPetVitals();
+    },
+  },
+
+  profile: {
+    init() {
+      const days = (window.activeEntryIndex ?? 49) + 1;
+      const msgEl = document.getElementById("profile-days-msg");
+      if (msgEl) {
+        msgEl.textContent = `You have been taking care of Drago for ${days} days. Well Done!!!`;
+      }
+    },
+  },
+
+  "remote-control": {
+    init() {
+      const channel = new BroadcastChannel("dragon_control");
+
+      document.getElementById("btnGiveFood").addEventListener("click", () => {
+        const food = Progression.randomFood();
+        channel.postMessage({ type: "addFood", payload: { food } });
+      });
+
+      let currentEntry = window.activeEntryIndex ?? 49;
+      const total = DataLoader.getAll().length;
+      const entryLabel = document.getElementById("current-entry");
+
+      function updateEntryLabel() {
+        if (entryLabel)
+          entryLabel.textContent = `Entry ${currentEntry + 1} of ${total}`;
+      }
+
+      updateEntryLabel();
+
+      document.getElementById("btnPrevDay").addEventListener("click", () => {
+        if (currentEntry <= 0) return;
+        currentEntry--;
+        window.activeEntryIndex = currentEntry;
+        updateEntryLabel();
+        channel.postMessage({
+          type: "setEntry",
+          payload: { index: currentEntry },
+        });
+      });
+
+      document.getElementById("btnNextDay").addEventListener("click", () => {
+        if (currentEntry >= total - 1) return;
+        currentEntry++;
+        window.activeEntryIndex = currentEntry;
+        updateEntryLabel();
+        channel.postMessage({
+          type: "setEntry",
+          payload: { index: currentEntry },
+        });
+      });
+
+      document.querySelectorAll("[data-mode]").forEach((btn) => {
+        btn.addEventListener("click", () => {
+          channel.postMessage({
+            type: "setMode",
+            payload: { mode: btn.dataset.mode },
+          });
+        });
+      });
+
+      document.querySelectorAll("[data-anim]").forEach((btn) => {
+        btn.addEventListener("click", () => {
+          const loops =
+            btn.dataset.loops === "Infinity"
+              ? Infinity
+              : parseInt(btn.dataset.loops);
+          const next = btn.dataset.next || null;
+          channel.postMessage({
+            type: "setAnimation",
+            payload: { name: btn.dataset.anim, loops, next },
+          });
+        });
+      });
+
+      document
+        .getElementById("btnNextDayAdvance")
+        .addEventListener("click", () => {
+          if (currentEntry >= total - 1) return;
+
+          const prevEntry = currentEntry;
+          currentEntry++;
+          window.activeEntryIndex = currentEntry;
+          updateEntryLabel();
+
+          // Tell home tab to advance and show popup
+          channel.postMessage({
+            type: "nextDay",
+            payload: { prevIndex: prevEntry, newIndex: currentEntry },
+          });
+        });
+    },
+  },
+
+  report: {
+    init() {
+      const tabs = document.querySelectorAll(".report-tab");
+      const view = document.getElementById("report-view");
+
+      async function loadTab(tab) {
+        tabs.forEach((t) =>
+          t.classList.toggle("active", t.dataset.tab === tab),
+        );
+        const res = await fetch(`pages/report-${tab}.html`);
+        view.innerHTML = await res.text();
+        const controllerKey = `report-${tab}`;
+        if (window.PageControllers?.[controllerKey]) {
+          window.PageControllers[controllerKey].init();
+        }
+      }
+
+      tabs.forEach((t) =>
+        t.addEventListener("click", () => loadTab(t.dataset.tab)),
+      );
+      loadTab("today");
     },
   },
 
@@ -56,6 +175,32 @@ window.PageControllers = {
       const m = Math.round(record.asleep % 60);
       const durEl = document.getElementById("today-duration");
       if (durEl) durEl.textContent = `${h} hrs ${m} mins`;
+
+      const legendEl = document.getElementById("today-legend");
+      if (legendEl) {
+        legendEl.innerHTML = `
+          <div style="display:flex; flex-wrap:wrap; gap:12px; font-size:11px;">
+            <div style="display:flex; align-items:center; gap:5px; color:#555;">
+              <div style="width:12px;height:12px;border-radius:2px;background:#1a3a6e;"></div> Deep
+            </div>
+            <div style="display:flex; align-items:center; gap:5px; color:#555;">
+              <div style="width:12px;height:12px;border-radius:2px;background:#6da8e0;"></div> REM
+            </div>
+            <div style="display:flex; align-items:center; gap:5px; color:#555;">
+              <div style="width:12px;height:12px;border-radius:2px;background:#a8c4f5;"></div> Light
+            </div>
+            <div style="display:flex; align-items:center; gap:5px; color:#555;">
+              <div style="width:12px;height:12px;border-radius:2px;background:#d0dff5;border:1px solid #ccc;"></div> Wake
+            </div>
+            <div style="display:flex; align-items:center; gap:5px; color:#2ecc71;">
+              <div style="width:18px;height:2px;background:#2ecc71;"></div> HRV (ms)
+            </div>
+            <div style="display:flex; align-items:center; gap:5px; color:#e05c7a;">
+              <div style="width:18px;height:2px;background:#e05c7a;"></div> BPM
+            </div>
+          </div>
+        `;
+      }
 
       function updateSubtitle() {
         const subtitleEl = document.getElementById("chart-subtitle");
@@ -105,32 +250,6 @@ window.PageControllers = {
           msg = `Sleep efficiency was ${score}% — try to get to bed earlier.`;
         if (messageEl) messageEl.textContent = msg;
       }
-
-      const legendEl = document.getElementById("today-legend");
-      if (legendEl) {
-        legendEl.innerHTML = `
-        <div style="display:flex; flex-wrap:wrap; gap:12px; font-size:11px;">
-          <div style="display:flex; align-items:center; gap:5px; color:#555;">
-            <div style="width:12px;height:12px;border-radius:2px;background:#1a3a6e;"></div> Deep
-          </div>
-          <div style="display:flex; align-items:center; gap:5px; color:#555;">
-            <div style="width:12px;height:12px;border-radius:2px;background:#6da8e0;"></div> REM
-          </div>
-          <div style="display:flex; align-items:center; gap:5px; color:#555;">
-            <div style="width:12px;height:12px;border-radius:2px;background:#a8c4f5;"></div> Light
-          </div>
-          <div style="display:flex; align-items:center; gap:5px; color:#555;">
-            <div style="width:12px;height:12px;border-radius:2px;background:#d0dff5;border:1px solid #ccc;"></div> Wake
-          </div>
-          <div style="display:flex; align-items:center; gap:5px; color:#2ecc71;">
-            <div style="width:18px;height:2px;background:#2ecc71;"></div> HRV (ms)
-          </div>
-          <div style="display:flex; align-items:center; gap:5px; color:#e05c7a;">
-            <div style="width:18px;height:2px;background:#e05c7a;"></div> BPM
-          </div>
-        </div>
-      `;
-      }
     },
   },
 
@@ -143,9 +262,8 @@ window.PageControllers = {
       const weekDays = Weekly.buildWeek(index);
       if (!weekDays) return;
 
-      // Calculate average efficiency here
       const allEff = weekDays
-        .filter((d) => d.efficiency != null)
+        .filter((d) => !d.isEmpty && d.efficiency != null)
         .map((d) => d.efficiency);
       const avgEff = allEff.length
         ? Math.round((allEff.reduce((s, v) => s + v, 0) / allEff.length) * 10) /
@@ -189,11 +307,9 @@ window.PageControllers = {
         track.addEventListener("click", () => {
           toggleState[layerName] = !toggleState[layerName];
           track.classList.toggle("on", toggleState[layerName]);
-
           if (layerName === "stages") showStages = toggleState[layerName];
           if (layerName === "hrv") showHRV = toggleState[layerName];
           if (layerName === "bpm") showBPM = toggleState[layerName];
-
           Charts.renderWeeklySleepChart(
             "chart-weekly-sleep",
             weekDays,
@@ -215,18 +331,17 @@ window.PageControllers = {
       const monthDays = Weekly.buildMonth(index);
       if (!monthDays) return;
 
-      // Subtitle
+      const currentDate = new Date(DataLoader.getAll()[index].date);
+      const monthName = currentDate.toLocaleDateString("en-US", {
+        month: "long",
+        year: "numeric",
+      });
+
       const subEl = document.getElementById("monthly-sleep-subtitle");
       if (subEl) {
-        const currentDate = new Date(DataLoader.getAll()[index].date);
-        const monthName = currentDate.toLocaleDateString("en-US", {
-          month: "long",
-          year: "numeric",
-        });
-        subEl.textContent = `${monthName} · Day ${index + 1} is last night · Max 7 days predicted ahead`;
+        subEl.textContent = `${monthName} · Entry ${index + 1} is last night · Max 7 days predicted ahead`;
       }
 
-      // Efficiency average
       const allEff = monthDays
         .filter((d) => !d.isEmpty && d.efficiency != null)
         .map((d) => d.efficiency);
@@ -234,9 +349,10 @@ window.PageControllers = {
         ? Math.round((allEff.reduce((s, v) => s + v, 0) / allEff.length) * 10) /
           10
         : null;
+
       const avgEl = document.getElementById("monthly-eff-avg");
       if (avgEl && avgEff != null) {
-        avgEl.innerHTML = `Avg sleep efficiency so far (days 1–${index + 1})<br><strong style="font-size:20px;color:#111;">${avgEff}%</strong>`;
+        avgEl.innerHTML = `Avg sleep efficiency so far<br><strong style="font-size:20px;color:#111;">${avgEff}%</strong>`;
       }
 
       let showStages = true,
@@ -283,108 +399,114 @@ window.PageControllers = {
       });
     },
   },
-
-  "remote-control": {
-    init() {
-      const channel = new BroadcastChannel("dragon_control");
-
-      document.getElementById("btnGiveFood").addEventListener("click", () => {
-        const food = Progression.randomFood();
-        channel.postMessage({ type: "addFood", payload: { food } });
-      });
-
-      // ── Day navigation ──
-      let currentEntry = 49; // 0-based, starts at entry 50
-      const total = DataLoader.getAll().length;
-      const entryLabel = document.getElementById("current-entry");
-
-      function updateEntryLabel() {
-        if (entryLabel)
-          entryLabel.textContent = `Entry ${currentEntry + 1} of ${total}`;
-      }
-
-      updateEntryLabel();
-
-      document.getElementById("btnPrevDay").addEventListener("click", () => {
-        if (currentEntry <= 0) return;
-        currentEntry--;
-        updateEntryLabel();
-        channel.postMessage({
-          type: "setEntry",
-          payload: { index: currentEntry },
-        });
-      });
-
-      document.getElementById("btnNextDay").addEventListener("click", () => {
-        if (currentEntry >= total - 1) return;
-        currentEntry++;
-        updateEntryLabel();
-        channel.postMessage({
-          type: "setEntry",
-          payload: { index: currentEntry },
-        });
-      });
-
-      document.querySelectorAll("[data-mode]").forEach((btn) => {
-        btn.addEventListener("click", () => {
-          channel.postMessage({
-            type: "setMode",
-            payload: { mode: btn.dataset.mode },
-          });
-        });
-      });
-
-      document.querySelectorAll("[data-anim]").forEach((btn) => {
-        btn.addEventListener("click", () => {
-          const loops =
-            btn.dataset.loops === "Infinity"
-              ? Infinity
-              : parseInt(btn.dataset.loops);
-          const next = btn.dataset.next || null;
-          channel.postMessage({
-            type: "setAnimation",
-            payload: { name: btn.dataset.anim, loops, next },
-          });
-        });
-      });
-    },
-  },
-
-  profile: {
-    init() {
-      const days = (window.activeEntryIndex ?? 49) + 1;
-      const msgEl = document.getElementById("profile-days-msg");
-      if (msgEl) {
-        msgEl.textContent = `You have been taking care of Drago for ${days} days. Well Done!!!`;
-      }
-    },
-  },
-  
-  report: {
-    init() {
-      const tabs = document.querySelectorAll(".report-tab");
-      const view = document.getElementById("report-view");
-
-      async function loadTab(tab) {
-        tabs.forEach((t) =>
-          t.classList.toggle("active", t.dataset.tab === tab),
-        );
-        const res = await fetch(`pages/report-${tab}.html`);
-        view.innerHTML = await res.text();
-
-        const controllerKey = `report-${tab}`;
-        if (window.PageControllers?.[controllerKey]) {
-          window.PageControllers[controllerKey].init();
-        }
-      }
-
-      tabs.forEach((t) =>
-        t.addEventListener("click", () => loadTab(t.dataset.tab)),
-      );
-      loadTab("today");
-    },
-  },
 };
+
+function getQualityFromEfficiency(efficiency) {
+  if (efficiency == null) return "common";
+  if (efficiency >= 96) return "legendary";
+  if (efficiency >= 89) return "epic";
+  if (efficiency >= 80) return "rare";
+  return "common";
+}
+
+function showSleepPopup(prevEntryIndex, newEntryIndex) {
+  if (window._popupOpen) return;
+  window._popupOpen = true;
+
+  const record = DataLoader.getAll()[newEntryIndex];
+  if (!record) return;
+
+  const quality = getQualityFromEfficiency(record.efficiency);
+  const foodTypes = ["apple", "fish", "chicken", "steak", "pizza"];
+  const foodType = foodTypes[Math.floor(Math.random() * foodTypes.length)];
+
+  const qualityColors = {
+    common: "#B0B0B0",
+    rare: "#3FA7FF",
+    epic: "#9B59FF",
+    legendary: "#FF9C1A",
+  };
+  const qualityLabels = {
+    common: "Common",
+    rare: "Rare",
+    epic: "Epic",
+    legendary: "Legendary",
+  };
+
+  const color = qualityColors[quality];
+  window._pendingFood = {
+    type: foodType,
+    quality,
+    id: Date.now() + Math.random(),
+  };
+
+  const eff = Math.round(record.efficiency ?? 0);
+  document.getElementById("popup-title").textContent =
+    `Last night you slept with ${eff}% efficiency. Because of that you are getting a ${qualityLabels[quality]} food item!`;
+
+  const icon = document.getElementById("popup-food-icon");
+  icon.src = `assets/food/food_${foodType}.png`;
+  icon.style.filter = `drop-shadow(0 0 10px ${color})`;
+
+  document.getElementById("popup-rarity-label").style.color = color;
+  document.getElementById("popup-rarity-label").textContent =
+    qualityLabels[quality];
+
+  const popup = document.getElementById("sleep-popup");
+  popup.style.display = "flex";
+
+  // Reset smileys
+  document.querySelectorAll(".smiley-btn").forEach((btn) => {
+    btn.style.opacity = "0.5";
+    btn.style.transform = "scale(1)";
+
+    // Clone to remove any previous listeners
+    const fresh = btn.cloneNode(true);
+    btn.parentNode.replaceChild(fresh, btn);
+  });
+
+  document.querySelectorAll(".smiley-btn").forEach((btn) => {
+    btn.addEventListener("mouseenter", () => {
+      btn.style.opacity = "1";
+      btn.style.transform = "scale(1.2)";
+    });
+    btn.addEventListener("mouseleave", () => {
+      btn.style.opacity = "0.5";
+      btn.style.transform = "scale(1)";
+    });
+
+    btn.addEventListener("click", async () => {
+      window._popupOpen = false;
+      const rating = btn.dataset.rating;
+
+      document.querySelectorAll(".smiley-btn").forEach((b) => {
+        b.style.opacity = "0.2";
+        b.style.transform = "scale(1)";
+      });
+      btn.style.opacity = "1";
+      btn.style.transform = "scale(1.3)";
+
+      await new Promise((resolve) => setTimeout(resolve, 500));
+
+      await SleepRatings.setRating(prevEntryIndex, rating);
+
+      popup.style.display = "none";
+
+      if (window._pendingFood) {
+        await Progression.addFoodToStash(window._pendingFood);
+        window._pendingFood = null;
+      }
+
+      const newRecord = DataLoader.getAll()[newEntryIndex];
+      Dragon.setAnimation("wake_up", 1);
+      setTimeout(() => {
+        Dragon.setMoodFromEfficiency(newRecord?.efficiency);
+      }, 1500);
+
+      renderHome();
+    });
+  });
+}
 
 function renderHome() {
   const { level, xp, stash } = Progression.getState();
@@ -429,6 +551,7 @@ function renderHome() {
     `;
     div.appendChild(img);
 
+    // ── Mouse drag ──
     div.addEventListener("dragstart", (e) => {
       e.dataTransfer.setData("foodId", item.id);
       const ghost = div.cloneNode(true);
@@ -437,8 +560,14 @@ function renderHome() {
       document.body.appendChild(ghost);
       e.dataTransfer.setDragImage(ghost, 24, 24);
       setTimeout(() => document.body.removeChild(ghost), 0);
+      Dragon.setAnimation("anticipate_food", Infinity);
     });
 
+    div.addEventListener("dragend", () => {
+      Dragon.setIdle();
+    });
+
+    // ── Touch drag ──
     let touchClone = null;
 
     div.addEventListener(
@@ -455,6 +584,7 @@ function renderHome() {
         top:  ${touch.clientY - 24}px;
       `;
         document.body.appendChild(touchClone);
+        Dragon.setAnimation("anticipate_food", Infinity);
       },
       { passive: true },
     );
@@ -477,9 +607,11 @@ function renderHome() {
         document.body.removeChild(touchClone);
         touchClone = null;
       }
+
       const touch = e.changedTouches[0];
       const canvas = document.getElementById("petCanvas");
       const rect = canvas.getBoundingClientRect();
+
       if (
         touch.clientX >= rect.left &&
         touch.clientX <= rect.right &&
@@ -493,11 +625,19 @@ function renderHome() {
         const didLevelUp = await Progression.addXP(q2.xp);
         if (didLevelUp) Dragon.setAnimation("level_up", 1);
         renderHome();
+      } else {
+        Dragon.setIdle();
       }
     });
 
     foodGrid.appendChild(div);
   });
+}
+
+function updateDragonMood() {
+  const index = window.activeEntryIndex ?? 49;
+  const record = DataLoader.getAll()[index];
+  if (record) Dragon.setMoodFromEfficiency(record.efficiency);
 }
 
 function renderPetVitals() {
@@ -593,6 +733,8 @@ function renderPetVitals() {
 document.addEventListener("DOMContentLoaded", async () => {
   await DataLoader.init();
   await Progression.init();
+  await SleepRatings.init();
   Dragon.init(document.getElementById("petCanvas"));
+  updateDragonMood();
   Router.init();
 });

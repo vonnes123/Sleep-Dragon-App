@@ -1,120 +1,79 @@
 {
-  "level": 6,
-  "xp": 255,
-  "stash": [
+  "level": 7,
+  "xp": 1130,
+  "stash": [],
+  "foodHistory": [
     {
-      "id": 1774805142628.0837,
       "type": "apple",
-      "quality": "legendary"
+      "quality": "epic",
+      "id": 1774814424930.8203,
+      "eatenAt": 1774814437487
+    },
+    {
+      "type": "pizza",
+      "quality": "rare",
+      "id": 1774814413904.8828,
+      "eatenAt": 1774814418100
+    },
+    {
+      "type": "steak",
+      "quality": "rare",
+      "id": 1774814195995.604,
+      "eatenAt": 1774814404705
+    },
+    {
+      "type": "chicken",
+      "quality": "legendary",
+      "id": 1774814178747.1653,
+      "eatenAt": 1774814403811
+    },
+    {
+      "type": "chicken",
+      "quality": "legendary",
+      "id": 1774814190401.6748,
+      "eatenAt": 1774814402780
+    },
+    {
+      "type": "fish",
+      "quality": "epic",
+      "id": 1774814140876.1252,
+      "eatenAt": 1774814147850
     },
     {
       "id": 1774805143030.776,
       "type": "steak",
-      "quality": "epic"
+      "quality": "epic",
+      "eatenAt": 1774814137503
     },
     {
       "id": 1774805143223.8884,
       "type": "pizza",
-      "quality": "common"
+      "quality": "common",
+      "eatenAt": 1774814136614
+    },
+    {
+      "type": "apple",
+      "quality": "legendary",
+      "id": 1774813339932.0222,
+      "eatenAt": 1774814135560
     },
     {
       "id": 1774805143406.966,
       "type": "steak",
-      "quality": "epic"
+      "quality": "epic",
+      "eatenAt": 1774814134557
     },
     {
-      "id": 1774805143582.0674,
-      "type": "pizza",
-      "quality": "legendary"
-    },
-    {
-      "id": 1774805143756.5757,
-      "type": "chicken",
-      "quality": "rare"
-    },
-    {
-      "id": 1774805143967.719,
-      "type": "fish",
-      "quality": "epic"
-    },
-    {
-      "id": 1774805145465.087,
-      "type": "pizza",
-      "quality": "legendary"
-    }
-  ],
-  "foodHistory": [
-    {
-      "id": 1774787175185.0647,
-      "type": "pizza",
-      "quality": "rare",
-      "eatenAt": 1774795137925
-    },
-    {
-      "id": 1774787681411.4917,
       "type": "steak",
       "quality": "rare",
-      "eatenAt": 1774794901040
+      "id": 1774813749517.556,
+      "eatenAt": 1774814133493
     },
     {
-      "id": 1774787681926.1204,
-      "type": "fish",
-      "quality": "rare",
-      "eatenAt": 1774788178517
-    },
-    {
-      "id": 1774787682892.0764,
-      "type": "steak",
-      "quality": "common",
-      "eatenAt": 1774787712085
-    },
-    {
-      "id": 1774787175874.0027,
-      "type": "apple",
-      "quality": "common",
-      "eatenAt": 1774787707717
-    },
-    {
-      "id": 1774787682295.0278,
-      "type": "apple",
-      "quality": "epic",
-      "eatenAt": 1774787689185
-    },
-    {
-      "id": 1774787682505.4688,
       "type": "pizza",
-      "quality": "legendary",
-      "eatenAt": 1774787688281
-    },
-    {
-      "id": 1774787682702.0078,
-      "type": "fish",
-      "quality": "epic",
-      "eatenAt": 1774787687189
-    },
-    {
-      "id": 1774787683091.3645,
-      "type": "steak",
-      "quality": "legendary",
-      "eatenAt": 1774787685691
-    },
-    {
-      "id": 1774787683289.0723,
-      "type": "pizza",
-      "quality": "epic",
-      "eatenAt": 1774787684752
-    },
-    {
-      "id": 1774787176051.979,
-      "type": "fish",
       "quality": "rare",
-      "eatenAt": 1774787679792
-    },
-    {
-      "id": 1774787176763.0698,
-      "type": "fish",
-      "quality": "rare",
-      "eatenAt": 1774787592600
+      "id": 1774813426649.5957,
+      "eatenAt": 1774814132464
     }
   ]
 }

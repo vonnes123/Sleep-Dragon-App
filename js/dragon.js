@@ -133,6 +133,8 @@ const Dragon = (() => {
     }
     if (type === "setEntry") {
       window.activeEntryIndex = payload.index;
+      const record = DataLoader.getAll()[payload.index];
+      if (record) Dragon.setMoodFromEfficiency(record.efficiency);
       if (window.PageControllers?.["report-today"]?.refresh)
         window.PageControllers["report-today"].refresh();
       if (window.PageControllers?.["report-weekly"]?.refresh)
@@ -140,12 +142,58 @@ const Dragon = (() => {
       if (window.PageControllers?.["report-monthly"]?.refresh)
         window.PageControllers["report-monthly"].refresh();
     }
+if (type === "nextDay") {
+  const { prevIndex, newIndex } = payload;
+  window.activeEntryIndex = newIndex;
+
+  Dragon.setAnimation("fall_asleep", 1, "sleep");
+
+  if (window.PageControllers?.["report-today"]?.refresh)
+    window.PageControllers["report-today"].refresh();
+  if (window.PageControllers?.["report-weekly"]?.refresh)
+    window.PageControllers["report-weekly"].refresh();
+  if (window.PageControllers?.["report-monthly"]?.refresh)
+    window.PageControllers["report-monthly"].refresh();
+
+  const isHomePage = !!document.getElementById("dragon-slot");
+
+  if (isHomePage) {
+    // On home — show directly, don't set pending
+    window._pendingPopup = null;
+    setTimeout(() => {
+      if (typeof showSleepPopup === "function")
+        showSleepPopup(prevIndex, newIndex);
+    }, 2000);
+  } else {
+    // Not on home — set pending for when home loads
+    window._pendingPopup = { prevIndex, newIndex };
+  }
+}
   };
 
   function getMode() {
     return idleMode;
   }
 
+  function setMoodFromEfficiency(efficiency) {
+    if (efficiency == null) {
+      setMode("normal");
+      return;
+    }
+    if (efficiency >= 95) setMode("energetic");
+    else if (efficiency >= 86) setMode("normal");
+    else setMode("tired");
+  }
+
   // in the return:
-  return { init, stop, setMode, getMode, setAnimation, setIdle, ANIMS };
+  return {
+    init,
+    stop,
+    setMode,
+    getMode,
+    setAnimation,
+    setIdle,
+    setMoodFromEfficiency,
+    ANIMS,
+  };
 })();

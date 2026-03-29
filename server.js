@@ -21,6 +21,18 @@ app.post("/save-state", (req, res) => {
   });
 });
 
+app.post("/save-ratings", (req, res) => {
+  const filePath = path.join(__dirname, "data", "sleep-ratings.json");
+  fs.writeFile(filePath, JSON.stringify(req.body, null, 2), (err) => {
+    if (err) {
+      console.error("[Server] Failed to save ratings:", err);
+      return res.status(500).json({ ok: false });
+    }
+    console.log("[Server] Ratings saved");
+    res.json({ ok: true });
+  });
+});
+
 app.listen(PORT, () => {
   console.log(`Sleep Dragon running at http://localhost:${PORT}`);
 });

@@ -134,6 +134,77 @@ window.PageControllers = {
     },
   },
 
+  "report-weekly": {
+    init() {
+      this.refresh();
+    },
+    refresh() {
+      const index = window.activeEntryIndex ?? 49;
+      const weekDays = Weekly.buildWeek(index);
+      if (!weekDays) return;
+
+      // Calculate average efficiency here
+      const allEff = weekDays
+        .filter((d) => d.efficiency != null)
+        .map((d) => d.efficiency);
+      const avgEff = allEff.length
+        ? Math.round((allEff.reduce((s, v) => s + v, 0) / allEff.length) * 10) /
+          10
+        : null;
+
+      const avgEl = document.getElementById("weekly-eff-avg");
+      if (avgEl && avgEff != null) {
+        avgEl.innerHTML = `Avg efficiency (all days)<br><strong style="font-size:20px;color:#111;">${avgEff}%</strong>`;
+      }
+
+      const subEl = document.getElementById("weekly-sleep-subtitle");
+      if (subEl) {
+        subEl.textContent = `Entry ${index + 1} is last night. Future entries use real dataset values shown as predictions.`;
+      }
+
+      let showStages = true,
+        showHRV = true,
+        showBPM = true;
+
+      Charts.renderWeeklySleepChart(
+        "chart-weekly-sleep",
+        weekDays,
+        showStages,
+        showHRV,
+        showBPM,
+      );
+      Charts.renderWeeklyBedtimeChart("chart-weekly-bedtime", weekDays);
+      Charts.renderWeeklyEfficiencyChart("chart-weekly-efficiency", weekDays);
+
+      const toggleState = { stages: true, hrv: true, bpm: true };
+      const trackIds = {
+        "wtrack-stages": "stages",
+        "wtrack-hrv": "hrv",
+        "wtrack-bpm": "bpm",
+      };
+
+      Object.entries(trackIds).forEach(([trackId, layerName]) => {
+        const track = document.getElementById(trackId);
+        if (!track) return;
+        track.addEventListener("click", () => {
+          toggleState[layerName] = !toggleState[layerName];
+          track.classList.toggle("on", toggleState[layerName]);
+
+          if (layerName === "stages") showStages = toggleState[layerName];
+          if (layerName === "hrv") showHRV = toggleState[layerName];
+          if (layerName === "bpm") showBPM = toggleState[layerName];
+
+          Charts.renderWeeklySleepChart(
+            "chart-weekly-sleep",
+            weekDays,
+            showStages,
+            showHRV,
+            showBPM,
+          );
+        });
+      });
+    },
+  },
   "remote-control": {
     init() {
       const channel = new BroadcastChannel("dragon_control");

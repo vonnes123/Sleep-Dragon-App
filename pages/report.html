@@ -1,9 +1,56 @@
-<h1>Report</h1>
+<div class="page page-report">
+  <div class="report-tabs" style="
+    display: flex;
+    border-bottom: 2px solid #eee;
+    margin-bottom: 16px;
+  ">
+    <button class="report-tab active" data-tab="today" style="
+      flex: 1;
+      background: none;
+      border: none;
+      border-bottom: 2px solid transparent;
+      margin-bottom: -2px;
+      padding: 12px 8px;
+      font-size: 15px;
+      font-weight: 600;
+      color: #aaa;
+      cursor: pointer;
+      letter-spacing: 0.01em;
+    ">Today</button>
+    <button class="report-tab" data-tab="weekly" style="
+      flex: 1;
+      background: none;
+      border: none;
+      border-bottom: 2px solid transparent;
+      margin-bottom: -2px;
+      padding: 12px 8px;
+      font-size: 15px;
+      font-weight: 600;
+      color: #aaa;
+      cursor: pointer;
+      letter-spacing: 0.01em;
+    ">Weekly</button>
+    <button class="report-tab" data-tab="monthly" style="
+      flex: 1;
+      background: none;
+      border: none;
+      border-bottom: 2px solid transparent;
+      margin-bottom: -2px;
+      padding: 12px 8px;
+      font-size: 15px;
+      font-weight: 600;
+      color: #aaa;
+      cursor: pointer;
+      letter-spacing: 0.01em;
+    ">Monthly</button>
+  </div>
 
-<div>
-  <button class="report-tab" data-tab="today">Today</button>
-  <button class="report-tab" data-tab="weekly">Weekly</button>
-  <button class="report-tab" data-tab="monthly">Monthly</button>
+  <div id="report-view"></div>
 </div>
 
-<div id="report-view"></div>
+<style>
+  .report-tab.active {
+    color: #4f7cff !important;
+    border-bottom-color: #4f7cff !important;
+  }
+</style>

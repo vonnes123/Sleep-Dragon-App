@@ -1,1 +1,104 @@
-<p>Weekly view</p>
+<div style="padding: 0 16px 24px;">
+
+  <!-- Chart 1: Sleep stages + HRV + BPM -->
+<div style="font-size:11px; color:#555; margin-bottom:10px; display:flex; flex-wrap:wrap; align-items:center; gap:10px;">
+  <span style="font-weight:700; color:#333;">Actual</span>
+  <span style="display:inline-flex;align-items:center;gap:4px;"><span style="width:10px;height:10px;background:#1a3a6e;display:inline-block;border-radius:2px;"></span>Deep</span>
+  <span style="display:inline-flex;align-items:center;gap:4px;"><span style="width:10px;height:10px;background:#a8c4f5;display:inline-block;border-radius:2px;"></span>Light</span>
+  <span style="display:inline-flex;align-items:center;gap:4px;"><span style="width:10px;height:10px;background:#6da8e0;display:inline-block;border-radius:2px;"></span>REM</span>
+  <span style="color:#ccc;">|</span>
+  <span style="font-weight:700; color:#FF9C1A;">Predicted</span>
+  <span style="display:inline-flex;align-items:center;gap:4px;"><span style="width:10px;height:10px;background:#8B5A00;display:inline-block;border-radius:2px;"></span>Deep</span>
+  <span style="display:inline-flex;align-items:center;gap:4px;"><span style="width:10px;height:10px;background:#FFD580;display:inline-block;border-radius:2px;"></span>Light</span>
+  <span style="display:inline-flex;align-items:center;gap:4px;"><span style="width:10px;height:10px;background:#FFB347;display:inline-block;border-radius:2px;"></span>REM</span>
+  <span style="color:#ccc;">|</span>
+  <span style="display:inline-flex;align-items:center;gap:4px;"><span style="width:18px;height:2px;background:#2ecc71;display:inline-block;"></span>HRV</span>
+  <span style="display:inline-flex;align-items:center;gap:4px;"><span style="width:18px;height:2px;background:#e05c7a;display:inline-block;"></span>BPM</span>
+</div>
+
+  <div style="position:relative; height:220px; margin-bottom:6px;">
+    <canvas id="chart-weekly-sleep"></canvas>
+  </div>
+
+  <div id="weekly-sleep-subtitle" style="font-size:10px;color:#aaa;margin-bottom:12px;"></div>
+
+  <div style="display:flex; gap:16px; margin-bottom:24px; flex-wrap:wrap;">
+    <div style="display:flex;align-items:center;gap:8px;cursor:pointer;font-size:13px;color:#333;">
+      <div class="toggle-track on" id="wtrack-stages"><div class="toggle-thumb"></div></div>
+      Sleep Stages
+    </div>
+    <div style="display:flex;align-items:center;gap:8px;cursor:pointer;font-size:13px;color:#333;">
+      <div class="toggle-track on" id="wtrack-hrv"><div class="toggle-thumb"></div></div>
+      HRV
+    </div>
+    <div style="display:flex;align-items:center;gap:8px;cursor:pointer;font-size:13px;color:#333;">
+      <div class="toggle-track on" id="wtrack-bpm"><div class="toggle-thumb"></div></div>
+      BPM
+    </div>
+  </div>
+
+  <!-- Chart 2: Bedtime -->
+<div style="font-size:11px; color:#888; margin-bottom:6px;">
+  <span style="color:#555;font-weight:600;">Actual</span>
+  <span style="margin:0 6px;">·</span>
+  <span style="display:inline-flex;align-items:center;gap:4px;"><span style="width:18px;height:2px;background:#1a3a6e;display:inline-block;"></span>Bedtime</span>
+  &nbsp;
+  <span style="display:inline-flex;align-items:center;gap:4px;"><span style="width:18px;height:2px;background:#a8c4f5;display:inline-block;"></span>Fall asleep</span>
+  <span style="margin:0 8px;color:#ccc;">|</span>
+  <span style="color:#FF9C1A;font-weight:600;">Predicted</span>
+  <span style="margin:0 6px;">·</span>
+  <span style="display:inline-flex;align-items:center;gap:4px;"><span style="width:18px;height:2px;background:#8B4513;display:inline-block;"></span>Bedtime</span>
+  &nbsp;
+  <span style="display:inline-flex;align-items:center;gap:4px;"><span style="width:18px;height:2px;background:#FFB347;display:inline-block;"></span>Fall asleep</span>
+</div>
+
+  <div style="position:relative; height:180px; margin-bottom:6px;">
+    <canvas id="chart-weekly-bedtime"></canvas>
+  </div>
+
+  <div style="font-size:10px;color:#aaa;margin-bottom:24px;">
+    Later times appear higher. Predicted entries use real dataset values shown as predictions.
+  </div>
+
+  <!-- Chart 3: Efficiency -->
+  <div id="weekly-eff-avg" style="font-size:12px;color:#888;margin-bottom:4px;"></div>
+  <div style="font-size:11px;color:#888;margin-bottom:6px;">
+    <span style="display:inline-flex;align-items:center;gap:4px;"><span style="width:10px;height:10px;background:#4f7cff;display:inline-block;border-radius:2px;"></span>Actual</span>
+    <span style="margin:0 6px;">
+    <span style="display:inline-flex;align-items:center;gap:4px;"><span style="width:10px;height:10px;background:#FFB347;display:inline-block;border-radius:2px;"></span>Predicted</span>
+    <span style="margin:0 6px;">
+    <span style="display:inline-flex;align-items:center;gap:4px;"><span style="width:18px;height:2px;background:#e05c7a;display:inline-block;border-style:dashed;"></span>Avg</span>
+  </div>
+
+  <div style="position:relative; height:180px; margin-bottom:6px;">
+    <canvas id="chart-weekly-efficiency"></canvas>
+  </div>
+
+  <div style="font-size:10px;color:#aaa;">
+    Entry 50 is last night. Predicted entries use real dataset values shown as predictions.
+  </div>
+
+</div>
+
+<style>
+  .toggle-track {
+    width:40px; height:22px;
+    background:#ccc;
+    border-radius:99px;
+    position:relative;
+    cursor:pointer;
+    transition:background 0.2s;
+    flex-shrink:0;
+  }
+  .toggle-track.on { background:#4f7cff; }
+  .toggle-thumb {
+    width:16px; height:16px;
+    background:white;
+    border-radius:50%;
+    position:absolute;
+    top:3px; left:3px;
+    transition:left 0.2s;
+    box-shadow:0 1px 3px rgba(0,0,0,0.2);
+  }
+  .toggle-track.on .toggle-thumb { left:21px; }
+</style>

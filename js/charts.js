@@ -154,10 +154,10 @@ const Charts = (() => {
       if (!yScale || !xScale) return;
 
       const stageColors = {
-        0: "rgba(208, 223, 245, 0.5)", // wake   — very pale blue
-        1: "rgba(109, 168, 224, 0.6)", // rem    — medium blue
-        2: "rgba(168, 196, 245, 0.5)", // light  — light blue
-        3: "rgba(26,  58,  110, 0.7)", // deep   — dark navy
+        0: "rgba(208, 223, 245, 0.5)",
+        1: "rgba(109, 168, 224, 0.6)",
+        2: "rgba(168, 196, 245, 0.5)",
+        3: "rgba(26,  58,  110, 0.7)",
       };
 
       const bottom = yScale.getPixelForValue(3.5);
@@ -397,5 +397,359 @@ const Charts = (() => {
     });
   }
 
-  return { renderCombinedChart, toggleLayer, renderDonutChart };
+  // ── Weekly Sleep Stages + HRV + BPM ──
+  function renderWeeklySleepChart(
+    canvasId,
+    weekDays,
+    showStages,
+    showHRV,
+    showBPM,
+  ) {
+    destroyChart(canvasId);
+    const canvas = document.getElementById(canvasId);
+    if (!canvas) return;
+
+    const labels = weekDays.map((d) => d.date);
+
+    function stageDataset(field, color, predColor, label) {
+      return {
+        label,
+        data: weekDays.map((d) =>
+          d[field] != null ? Math.round(d[field]) : 0,
+        ),
+        backgroundColor: weekDays.map((d) =>
+          d.isPrediction ? predColor : color,
+        ),
+        borderRadius: 3,
+        stack: "sleep",
+        type: "bar",
+      };
+    }
+
+    const lightData = weekDays.map((d) => {
+      if (d.asleep == null) return 0;
+      return Math.round(Math.max(0, d.asleep - (d.deep ?? 0) - (d.rem ?? 0)));
+    });
+
+    const datasets = [];
+
+    if (showStages) {
+      datasets.push(
+        { ...stageDataset("deep", "#1a3a6e", "#8B5A00", "Deep"), order: 2 },
+        { ...stageDataset("rem", "#6da8e0", "#FFB347", "REM"), order: 2 },
+        {
+          label: "Light",
+          type: "bar",
+          data: lightData,
+          backgroundColor: weekDays.map((d) =>
+            d.isPrediction ? "#FFD580" : "#a8c4f5",
+          ),
+          borderRadius: 3,
+          stack: "sleep",
+        },
+      );
+    }
+
+    if (showHRV) {
+      datasets.push({
+        label: "HRV",
+        type: "line",
+        data: weekDays.map((d) =>
+          d.sleepHRV != null ? Math.round(d.sleepHRV * 10) / 10 : null,
+        ),
+        borderColor: "#2ecc71",
+        pointBackgroundColor: weekDays.map((d) =>
+          d.isPrediction ? "white" : "#2ecc71",
+        ),
+        pointBorderColor: "#2ecc71",
+        pointRadius: 5,
+        pointBorderWidth: weekDays.map((d) => (d.isPrediction ? 2 : 0)),
+        tension: 0.4,
+        fill: false,
+        yAxisID: "yRight",
+        spanGaps: true,
+        order: 0,
+        segment: {
+          borderDash: (ctx) =>
+            weekDays[ctx.p1DataIndex]?.isPrediction ? [4, 4] : [],
+        },
+      });
+    }
+
+    if (showBPM) {
+      datasets.push({
+        label: "BPM",
+        type: "line",
+        data: weekDays.map((d) =>
+          d.sleepBPM != null ? Math.round(d.sleepBPM * 10) / 10 : null,
+        ),
+        borderColor: "#e05c7a",
+        pointBackgroundColor: weekDays.map((d) =>
+          d.isPrediction ? "white" : "#e05c7a",
+        ),
+        pointBorderColor: "#e05c7a",
+        pointRadius: 5,
+        pointBorderWidth: weekDays.map((d) => (d.isPrediction ? 2 : 0)),
+        tension: 0.4,
+        fill: false,
+        yAxisID: "yRight",
+        spanGaps: true,
+        order: 0,
+        segment: {
+          borderDash: (ctx) =>
+            weekDays[ctx.p1DataIndex]?.isPrediction ? [4, 4] : [],
+        },
+      });
+    }
+
+    const chart = new Chart(canvas, {
+      type: "bar",
+      data: { labels, datasets },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        interaction: { mode: "index", intersect: false },
+        plugins: {
+          legend: { display: false },
+          tooltip: {
+            callbacks: {
+              label: (ctx) => {
+                if (ctx.dataset.label === "HRV") return ` HRV: ${ctx.raw}ms`;
+                if (ctx.dataset.label === "BPM") return ` BPM: ${ctx.raw}`;
+                const h = Math.floor(ctx.raw / 60);
+                const m = ctx.raw % 60;
+                return ` ${ctx.dataset.label}: ${h}h ${m}m`;
+              },
+            },
+          },
+        },
+        scales: {
+          x: {
+            ticks: { color: "#888", font: { size: 10 } },
+            grid: { display: false },
+          },
+          y: {
+            stacked: true,
+            ticks: {
+              color: "#888",
+              font: { size: 10 },
+              callback: (v) => `${Math.floor(v / 60)}h`,
+            },
+            grid: { color: "rgba(0,0,0,0.05)" },
+          },
+          yRight: {
+            display: showHRV || showBPM,
+            position: "right",
+            ticks: { color: "#888", font: { size: 10 } },
+            grid: { drawOnChartArea: false },
+          },
+        },
+      },
+    });
+
+    instances[canvasId] = chart;
+    return chart;
+  }
+
+  // ── Weekly Bedtime Chart ──
+function renderWeeklyBedtimeChart(canvasId, weekDays) {
+  destroyChart(canvasId);
+  const canvas = document.getElementById(canvasId);
+  if (!canvas) return;
+
+  const labels = weekDays.map((d) => d.date);
+
+  const chart = new Chart(canvas, {
+    type: "line",
+    data: {
+      labels,
+      datasets: [
+        {
+          label: "Bedtime",
+          data: weekDays.map((d) =>
+            d.bedtimeHour != null
+              ? Math.round(d.bedtimeHour * 100) / 100
+              : null,
+          ),
+          borderColor: weekDays.map((d) =>
+            d.isPrediction ? "#8B4513" : "#1a3a6e",
+          ),
+          pointBackgroundColor: weekDays.map((d) =>
+            d.isPrediction ? "#8B4513" : "#1a3a6e",
+          ),
+          pointBorderColor: weekDays.map((d) =>
+            d.isPrediction ? "#8B4513" : "#1a3a6e",
+          ),
+          pointRadius: 5,
+          pointBorderWidth: 0,
+          tension: 0.4,
+          fill: false,
+          spanGaps: true,
+          segment: {
+            borderColor: (ctx) =>
+              weekDays[ctx.p1DataIndex]?.isPrediction ? "#8B4513" : "#1a3a6e",
+          },
+        },
+        {
+          label: "Fall Asleep",
+          data: weekDays.map((d) => {
+            if (d.bedtimeHour == null || d.fellAsleepIn == null) return null;
+            return (
+              Math.round((d.bedtimeHour + d.fellAsleepIn / 60) * 100) / 100
+            );
+          }),
+          borderColor: weekDays.map((d) =>
+            d.isPrediction ? "#FFB347" : "#a8c4f5",
+          ),
+          pointBackgroundColor: weekDays.map((d) =>
+            d.isPrediction ? "#FFB347" : "#a8c4f5",
+          ),
+          pointBorderColor: weekDays.map((d) =>
+            d.isPrediction ? "#FFB347" : "#a8c4f5",
+          ),
+          pointRadius: 5,
+          pointBorderWidth: 0,
+          tension: 0.4,
+          fill: false,
+          spanGaps: true,
+          segment: {
+            borderColor: (ctx) =>
+              weekDays[ctx.p1DataIndex]?.isPrediction ? "#FFB347" : "#a8c4f5",
+          },
+        },
+      ],
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      interaction: { mode: "index", intersect: false },
+      plugins: {
+        legend: { display: false },
+        tooltip: {
+          callbacks: {
+            label: (ctx) => {
+              const h = ctx.raw;
+              if (h == null) return null;
+              const norm = h >= 24 ? h - 24 : h;
+              const hh = Math.floor(norm);
+              const mm = Math.round((norm - hh) * 60);
+              return ` ${ctx.dataset.label}: ${String(hh).padStart(2, "0")}:${String(mm).padStart(2, "0")}`;
+            },
+          },
+        },
+      },
+      scales: {
+        x: {
+          ticks: { color: "#888", font: { size: 10 } },
+          grid: { display: false },
+        },
+        y: {
+          ticks: {
+            color: "#888",
+            font: { size: 10 },
+            callback: (v) => {
+              const norm = v >= 24 ? v - 24 : v;
+              const hh = Math.floor(norm);
+              const mm = Math.round((norm - hh) * 60);
+              return `${String(hh).padStart(2, "0")}:${String(mm).padStart(2, "0")}`;
+            },
+          },
+          grid: { color: "rgba(0,0,0,0.05)" },
+        },
+      },
+    },
+  });
+
+  instances[canvasId] = chart;
+  return chart;
+}
+
+  // ── Weekly Efficiency Histogram ──
+function renderWeeklyEfficiencyChart(canvasId, weekDays) {
+  destroyChart(canvasId);
+  const canvas = document.getElementById(canvasId);
+  if (!canvas) return;
+
+  const labels = weekDays.map((d) => d.date);
+  const effData = weekDays.map((d) =>
+    d.efficiency != null ? Math.round(d.efficiency * 10) / 10 : null,
+  );
+
+  // Average includes all days with data (actual + predicted)
+  const allVals = effData.filter((v) => v != null);
+  const avg = allVals.length
+    ? Math.round((allVals.reduce((s, v) => s + v, 0) / allVals.length) * 10) /
+      10
+    : null;
+
+  instances[canvasId] = new Chart(canvas, {
+    type: "bar",
+    data: {
+      labels,
+      datasets: [
+        {
+          label: "Efficiency",
+          data: effData,
+          backgroundColor: weekDays.map((d) =>
+            d.isPrediction ? "#FFB347" : "#4f7cff",
+          ),
+          borderRadius: 3,
+          order: 1,
+        },
+        {
+          label: "Average",
+          data: weekDays.map(() => avg),
+          type: "line",
+          borderColor: "#e05c7a",
+          borderDash: [4, 4],
+          borderWidth: 1.5,
+          pointRadius: 0,
+          fill: false,
+          order: 0,
+        },
+      ],
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      interaction: { mode: "index", intersect: false },
+      plugins: {
+        legend: { display: false },
+        tooltip: {
+          callbacks: {
+            label: (ctx) => {
+              if (ctx.dataset.label === "Average") return ` Avg: ${ctx.raw}%`;
+              return ` Efficiency: ${ctx.raw}%`;
+            },
+          },
+        },
+      },
+      scales: {
+        x: {
+          ticks: { color: "#888", font: { size: 10 } },
+          grid: { display: false },
+        },
+        y: {
+          min: 70,
+          max: 100,
+          ticks: {
+            color: "#888",
+            font: { size: 10 },
+            callback: (v) => `${v}%`,
+          },
+          grid: { color: "rgba(0,0,0,0.05)" },
+        },
+      },
+    },
+  });
+}
+
+  return {
+    renderCombinedChart,
+    toggleLayer,
+    renderDonutChart,
+    renderWeeklySleepChart,
+    renderWeeklyBedtimeChart,
+    renderWeeklyEfficiencyChart,
+  };
 })();

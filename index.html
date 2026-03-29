@@ -13,43 +13,64 @@
   <canvas id="petCanvas" width="200" height="200"
           style="display:none; image-rendering:pixelated;"></canvas>
 
-  <nav id="bottom-nav">
-    <button class="nav-item" data-page="home">Home</button>
-    <button class="nav-item" data-page="report">Report</button>
-    <button class="nav-item" data-page="pet-vitals">Pet Vitals</button>
-    <button class="nav-item" data-page="profile">Profile</button>
-  </nav>
+<nav id="bottom-nav">
+  <button class="nav-item" data-page="home">
+    <span class="nav-icon">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M3 9.5L12 3l9 6.5V20a1 1 0 01-1 1H4a1 1 0 01-1-1V9.5z"/>
+        <path d="M9 21V12h6v9"/>
+      </svg>
+    </span>
+    <span class="nav-label">Home</span>
+  </button>
+
+  <button class="nav-item" data-page="report">
+    <span class="nav-icon">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M3 3v18h18"/>
+        <path d="M7 16l4-4 4 4 4-4"/>
+      </svg>
+    </span>
+    <span class="nav-label">Report</span>
+  </button>
+
+  <button class="nav-item" data-page="pet-vitals">
+    <span class="nav-icon">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 000-7.78z"/>
+      </svg>
+    </span>
+    <span class="nav-label">Pet Vitals</span>
+  </button>
+
+  <button class="nav-item" data-page="profile">
+    <span class="nav-icon">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+        <circle cx="12" cy="8" r="4"/>
+        <path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/>
+      </svg>
+    </span>
+    <span class="nav-label">Profile</span>
+  </button>
+</nav>
 
   <!-- Sleep popup -->
-<div id="sleep-popup" style="display:none; position:fixed; inset:0; z-index:200;
-  background:rgba(0,0,0,0.5); align-items:center; justify-content:center;">
-  <div style="
-    background: white;
-    border-radius: 20px;
-    padding: 28px 24px;
-    max-width: 320px;
-    width: 90%;
-    text-align: center;
-    margin: 0 auto;
-  ">
-    <div id="popup-title" style="font-size:15px; color:#333; line-height:1.6; margin-bottom:20px;"></div>
-
-    <div id="popup-food-img" style="margin-bottom:8px; display:flex; justify-content:center;">
-      <img id="popup-food-icon" src="" style="width:72px;height:72px;object-fit:contain;image-rendering:pixelated;" />
+<div id="sleep-popup" class="popup-overlay">
+  <div class="popup-box">
+    <div id="popup-title" class="popup-title"></div>
+    <div class="popup-food-img">
+      <img id="popup-food-icon" class="popup-food-icon" src="" alt="Food" />
     </div>
-
-    <div id="popup-rarity-label" style="font-size:14px; font-weight:700; margin-bottom:20px;"></div>
-
-    <div style="font-size:13px; color:#888; margin-bottom:14px;">How did you sleep last night?</div>
-
-    <div id="popup-smileys" style="display:flex; justify-content:center; gap:12px; margin-bottom:4px;">
-      <button class="smiley-btn" data-rating="very_bad"  title="Very Bad"  style="font-size:28px; background:none; border:none; cursor:pointer; opacity:0.5; transition:opacity 0.15s, transform 0.15s;">😴</button>
-      <button class="smiley-btn" data-rating="bad"       title="Bad"       style="font-size:28px; background:none; border:none; cursor:pointer; opacity:0.5; transition:opacity 0.15s, transform 0.15s;">😞</button>
-      <button class="smiley-btn" data-rating="okay"      title="Okay"      style="font-size:28px; background:none; border:none; cursor:pointer; opacity:0.5; transition:opacity 0.15s, transform 0.15s;">😐</button>
-      <button class="smiley-btn" data-rating="good"      title="Good"      style="font-size:28px; background:none; border:none; cursor:pointer; opacity:0.5; transition:opacity 0.15s, transform 0.15s;">🙂</button>
-      <button class="smiley-btn" data-rating="very_good" title="Very Good" style="font-size:28px; background:none; border:none; cursor:pointer; opacity:0.5; transition:opacity 0.15s, transform 0.15s;">😄</button>
+    <div id="popup-rarity-label" class="popup-rarity-label"></div>
+    <div class="popup-rating-prompt">How did you sleep last night?</div>
+    <div class="popup-smileys" id="popup-smileys">
+      <button class="smiley-btn" data-rating="very_bad"  title="Very Bad">😴</button>
+      <button class="smiley-btn" data-rating="bad"       title="Bad">😞</button>
+      <button class="smiley-btn" data-rating="okay"      title="Okay">😐</button>
+      <button class="smiley-btn" data-rating="good"      title="Good">🙂</button>
+      <button class="smiley-btn" data-rating="very_good" title="Very Good">😄</button>
     </div>
-    <div style="font-size:10px; color:#bbb; display:flex; justify-content:space-between; padding:0 4px;">
+    <div class="popup-rating-scale">
       <span>Very bad</span><span>Very good</span>
     </div>
   </div>

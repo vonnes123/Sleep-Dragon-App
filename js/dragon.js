@@ -104,7 +104,8 @@ const Dragon = (() => {
     canvas = canvasEl;
     ctx = canvas.getContext("2d");
     sprite = new Image();
-    sprite.src = "assets/dragon/dragon.png";
+    //sprite.src = "assets/dragon/dragon.png";
+    sprite.src = "assets/dragon/dragon_no_bg.png";
     sprite.onload = () => {
       running = true;
       setIdle();

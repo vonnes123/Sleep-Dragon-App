@@ -58,6 +58,20 @@ window.PageControllers = {
     init() {
       const channel = new BroadcastChannel("dragon_control");
 
+      document
+        .getElementById("btnNextDayAdvance")
+        .addEventListener("click", () => {
+          if (currentEntry >= total - 1) return;
+          const prevEntry = currentEntry;
+          currentEntry++;
+          window.activeEntryIndex = currentEntry;
+          updateEntryLabel();
+          channel.postMessage({
+            type: "nextDay",
+            payload: { prevIndex: prevEntry, newIndex: currentEntry },
+          });
+        });
+
       document.getElementById("btnGiveFood").addEventListener("click", () => {
         const food = Progression.randomFood();
         channel.postMessage({ type: "addFood", payload: { food } });
@@ -118,23 +132,6 @@ window.PageControllers = {
           });
         });
       });
-
-      document
-        .getElementById("btnNextDayAdvance")
-        .addEventListener("click", () => {
-          if (currentEntry >= total - 1) return;
-
-          const prevEntry = currentEntry;
-          currentEntry++;
-          window.activeEntryIndex = currentEntry;
-          updateEntryLabel();
-
-          // Tell home tab to advance and show popup
-          channel.postMessage({
-            type: "nextDay",
-            payload: { prevIndex: prevEntry, newIndex: currentEntry },
-          });
-        });
     },
   },
 
@@ -178,26 +175,31 @@ window.PageControllers = {
 
       const legendEl = document.getElementById("today-legend");
       if (legendEl) {
+        legendEl.className = "chart-legend legend-built";
         legendEl.innerHTML = `
-          <div style="display:flex; flex-wrap:wrap; gap:12px; font-size:11px;">
-            <div style="display:flex; align-items:center; gap:5px; color:#555;">
-              <div style="width:12px;height:12px;border-radius:2px;background:#1a3a6e;"></div> Deep
-            </div>
-            <div style="display:flex; align-items:center; gap:5px; color:#555;">
-              <div style="width:12px;height:12px;border-radius:2px;background:#6da8e0;"></div> REM
-            </div>
-            <div style="display:flex; align-items:center; gap:5px; color:#555;">
-              <div style="width:12px;height:12px;border-radius:2px;background:#a8c4f5;"></div> Light
-            </div>
-            <div style="display:flex; align-items:center; gap:5px; color:#555;">
-              <div style="width:12px;height:12px;border-radius:2px;background:#d0dff5;border:1px solid #ccc;"></div> Wake
-            </div>
-            <div style="display:flex; align-items:center; gap:5px; color:#2ecc71;">
-              <div style="width:18px;height:2px;background:#2ecc71;"></div> HRV (ms)
-            </div>
-            <div style="display:flex; align-items:center; gap:5px; color:#e05c7a;">
-              <div style="width:18px;height:2px;background:#e05c7a;"></div> BPM
-            </div>
+          <div class="legend-built-item">
+            <div class="legend-built-swatch" style="background:#1a3a6e;"></div>
+            <span style="color:#555;">Deep</span>
+          </div>
+          <div class="legend-built-item">
+            <div class="legend-built-swatch" style="background:#6da8e0;"></div>
+            <span style="color:#555;">REM</span>
+          </div>
+          <div class="legend-built-item">
+            <div class="legend-built-swatch" style="background:#a8c4f5;"></div>
+            <span style="color:#555;">Light</span>
+          </div>
+          <div class="legend-built-item">
+            <div class="legend-built-swatch" style="background:#d0dff5;border:1px solid #ccc;"></div>
+            <span style="color:#555;">Wake</span>
+          </div>
+          <div class="legend-built-item">
+            <div class="legend-built-line" style="background:#2ecc71;"></div>
+            <span style="color:#2ecc71;">HRV (ms)</span>
+          </div>
+          <div class="legend-built-item">
+            <div class="legend-built-line" style="background:#e05c7a;"></div>
+            <span style="color:#e05c7a;">BPM</span>
           </div>
         `;
       }
@@ -272,7 +274,10 @@ window.PageControllers = {
 
       const avgEl = document.getElementById("weekly-eff-avg");
       if (avgEl && avgEff != null) {
-        avgEl.innerHTML = `Avg efficiency (all days)<br><strong style="font-size:20px;color:#111;">${avgEff}%</strong>`;
+        avgEl.innerHTML = `
+          <span class="avg-label">Avg efficiency (all days)</span><br>
+          <span class="avg-value">${avgEff}%</span>
+        `;
       }
 
       const subEl = document.getElementById("weekly-sleep-subtitle");
@@ -352,7 +357,10 @@ window.PageControllers = {
 
       const avgEl = document.getElementById("monthly-eff-avg");
       if (avgEl && avgEff != null) {
-        avgEl.innerHTML = `Avg sleep efficiency so far<br><strong style="font-size:20px;color:#111;">${avgEff}%</strong>`;
+        avgEl.innerHTML = `
+          <span class="avg-label">Avg sleep efficiency so far</span><br>
+          <span class="avg-value">${avgEff}%</span>
+        `;
       }
 
       let showStages = true,
@@ -401,12 +409,223 @@ window.PageControllers = {
   },
 };
 
+function renderHome() {
+  const { level, xp, stash } = Progression.getState();
+  const needed = Progression.xpToNext(level);
+  const pct = Math.min((xp / needed) * 100, 100);
+
+  const levelLabel = document.getElementById("level-label");
+  const xpBar = document.getElementById("xp-bar");
+  const xpFraction = document.getElementById("xp-fraction");
+  const xpBadgeValue = document.getElementById("xp-badge-value");
+  const xpBadgeNext = document.getElementById("xp-badge-next");
+  const foodGrid = document.getElementById("food-grid");
+  const foodEmpty = document.getElementById("food-empty");
+  const foodCount = document.getElementById("food-count");
+
+  if (!levelLabel && !xpBar && !foodGrid) return;
+
+  if (levelLabel) levelLabel.textContent = `Level ${level}`;
+  if (xpFraction) xpFraction.textContent = `${Math.round(xp)} / ${needed} XP`;
+  if (xpBadgeValue) xpBadgeValue.textContent = `${Math.round(xp)} XP`;
+  if (xpBadgeNext)
+    xpBadgeNext.textContent = `Next: ${needed - Math.round(xp)} XP`;
+  if (xpBar) xpBar.style.width = pct + "%";
+  if (foodCount)
+    foodCount.textContent = `${stash.length} item${stash.length !== 1 ? "s" : ""}`;
+
+  if (!foodGrid) return;
+  foodGrid.innerHTML = "";
+
+  if (stash.length === 0) {
+    if (foodEmpty) foodEmpty.style.display = "block";
+    return;
+  }
+  if (foodEmpty) foodEmpty.style.display = "none";
+
+  const qualities = Progression.getQualities();
+
+  stash.forEach((item) => {
+    const q = qualities.find((q) => q.name === item.quality);
+    const div = document.createElement("div");
+    div.className = "food-item";
+    div.draggable = true;
+    div.dataset.id = item.id;
+
+    const img = document.createElement("img");
+    img.src = `assets/food/food_${item.type}.png`;
+    img.style.filter = `drop-shadow(0 0 6px ${q.color})`;
+    div.appendChild(img);
+
+    div.addEventListener("dragstart", (e) => {
+      e.dataTransfer.setData("foodId", item.id);
+      const ghost = div.cloneNode(true);
+      ghost.style.position = "absolute";
+      ghost.style.top = "-200px";
+      document.body.appendChild(ghost);
+      e.dataTransfer.setDragImage(ghost, 24, 24);
+      setTimeout(() => document.body.removeChild(ghost), 0);
+      Dragon.setAnimation("anticipate_food", Infinity);
+    });
+
+    div.addEventListener("dragend", () => Dragon.setIdle());
+
+    let touchClone = null;
+
+    div.addEventListener(
+      "touchstart",
+      (e) => {
+        const touch = e.touches[0];
+        touchClone = div.cloneNode(true);
+        touchClone.style.cssText = `
+        position: fixed;
+        width: 64px; height: 64px;
+        pointer-events: none;
+        z-index: 1000;
+        left: ${touch.clientX - 32}px;
+        top:  ${touch.clientY - 32}px;
+        opacity: 0.9;
+      `;
+        document.body.appendChild(touchClone);
+        Dragon.setAnimation("anticipate_food", Infinity);
+      },
+      { passive: true },
+    );
+
+    div.addEventListener(
+      "touchmove",
+      (e) => {
+        if (!touchClone) return; // not dragging — let scroll happen normally
+        e.preventDefault(); // only block scroll when actually dragging food
+        const touch = e.touches[0];
+        touchClone.style.left = `${touch.clientX - 32}px`;
+        touchClone.style.top = `${touch.clientY - 32}px`;
+      },
+      { passive: false },
+    );
+
+    div.addEventListener("touchend", async (e) => {
+      if (touchClone) {
+        document.body.removeChild(touchClone);
+        touchClone = null;
+      }
+      const touch = e.changedTouches[0];
+      const canvas = document.getElementById("petCanvas");
+      const rect = canvas.getBoundingClientRect();
+      if (
+        touch.clientX >= rect.left &&
+        touch.clientX <= rect.right &&
+        touch.clientY >= rect.top &&
+        touch.clientY <= rect.bottom
+      ) {
+        const removed = await Progression.removeFoodFromStash(item.id);
+        if (!removed) return;
+        const q2 = qualities.find((q) => q.name === removed.quality);
+        Dragon.setAnimation("chew", 2);
+        const didLevelUp = await Progression.addXP(q2.xp);
+        if (didLevelUp) Dragon.setAnimation("level_up", 1);
+        renderHome();
+      } else {
+        Dragon.setIdle();
+      }
+    });
+
+    foodGrid.appendChild(div);
+  });
+}
+
+function renderPetVitals() {
+  const { level, foodHistory } = Progression.getState();
+  const qualities = Progression.getQualities();
+
+  const statusBox = document.getElementById("vitals-status-box");
+  const dragonImg = document.getElementById("vitals-dragon-img");
+  if (statusBox && dragonImg) {
+    const mode = Dragon.getMode();
+    const messages = {
+      normal: "Today Drago is feeling Normal",
+      tired: "Today Drago is feeling Tired",
+      energetic: "Today Drago is feeling Energetic",
+    };
+    statusBox.textContent = messages[mode] || messages.normal;
+    dragonImg.src = `assets/dragon/dragon-${mode || "normal"}.png`;
+  }
+
+  let pct = 0;
+  if (level >= 20) pct = 100;
+  else if (level >= 10) pct = ((level - 10) / 10) * 100;
+  else pct = ((level - 1) / 9) * 100;
+
+  const pctLabel = document.getElementById("evo-pct-label");
+  const fillRect = document.getElementById("evo-fill-rect");
+
+  if (pctLabel)
+    pctLabel.innerHTML = `${Math.round(pct)}<span style="font-size:16px;">%</span>`;
+  if (fillRect) {
+    const fillHeight = (pct / 100) * 160;
+    fillRect.setAttribute("y", 160 - fillHeight);
+    fillRect.setAttribute("height", fillHeight);
+  }
+
+  const tipEl = document.getElementById("vitals-tip");
+  if (tipEl) {
+    let tip = "";
+    if (level >= 20) {
+      tip =
+        "🎉 Your dragon has fully evolved! You're a sleep champion — keep it up!";
+    } else if (level >= 10) {
+      const remaining = 20 - level;
+      tip = `✨ Your dragon has evolved once! Just ${remaining} more level${remaining > 1 ? "s" : ""} until the final evolution. Better sleep means more food for Drago!`;
+    } else if (level >= 7) {
+      const remaining = 10 - level;
+      tip = `🔥 So close! Only ${remaining} more level${remaining > 1 ? "s" : ""} until your dragon evolves. Keep those sleep habits strong!`;
+    } else if (level >= 4) {
+      tip =
+        "😴 Your dragon is growing! Consistent sleep will help Drago reach the next evolution sooner than you think.";
+    } else {
+      tip =
+        "🌙 Your dragon's journey is just beginning. Good sleep tonight could bring Drago one step closer to evolving!";
+    }
+    tipEl.textContent = tip;
+  }
+
+  const grid = document.getElementById("food-history-grid");
+  const empty = document.getElementById("food-history-empty");
+  if (!grid) return;
+
+  grid.innerHTML = "";
+
+  if (foodHistory.length === 0) {
+    if (empty) empty.style.display = "block";
+    return;
+  }
+  if (empty) empty.style.display = "none";
+
+  foodHistory.forEach((item) => {
+    const q = qualities.find((q) => q.name === item.quality);
+    const div = document.createElement("div");
+    div.className = "food-item";
+
+    const img = document.createElement("img");
+    img.src = `assets/food/food_${item.type}.png`;
+    img.style.filter = `drop-shadow(0 0 5px ${q.color})`;
+    div.appendChild(img);
+    grid.appendChild(div);
+  });
+}
+
 function getQualityFromEfficiency(efficiency) {
   if (efficiency == null) return "common";
   if (efficiency >= 96) return "legendary";
   if (efficiency >= 89) return "epic";
   if (efficiency >= 80) return "rare";
   return "common";
+}
+
+function updateDragonMood() {
+  const index = window.activeEntryIndex ?? 49;
+  const record = DataLoader.getAll()[index];
+  if (record) Dragon.setMoodFromEfficiency(record.efficiency);
 }
 
 function showSleepPopup(prevEntryIndex, newEntryIndex) {
@@ -453,14 +672,11 @@ function showSleepPopup(prevEntryIndex, newEntryIndex) {
     qualityLabels[quality];
 
   const popup = document.getElementById("sleep-popup");
-  popup.style.display = "flex";
+  popup.classList.add("open");
 
-  // Reset smileys
   document.querySelectorAll(".smiley-btn").forEach((btn) => {
     btn.style.opacity = "0.5";
     btn.style.transform = "scale(1)";
-
-    // Clone to remove any previous listeners
     const fresh = btn.cloneNode(true);
     btn.parentNode.replaceChild(fresh, btn);
   });
@@ -490,7 +706,7 @@ function showSleepPopup(prevEntryIndex, newEntryIndex) {
 
       await SleepRatings.setRating(prevEntryIndex, rating);
 
-      popup.style.display = "none";
+      popup.classList.remove("open");
 
       if (window._pendingFood) {
         await Progression.addFoodToStash(window._pendingFood);
@@ -505,228 +721,6 @@ function showSleepPopup(prevEntryIndex, newEntryIndex) {
 
       renderHome();
     });
-  });
-}
-
-function renderHome() {
-  const { level, xp, stash } = Progression.getState();
-  const needed = Progression.xpToNext(level);
-  const pct = Math.min((xp / needed) * 100, 100);
-
-  const levelLabel = document.getElementById("level-label");
-  const xpBar = document.getElementById("xp-bar");
-  const foodGrid = document.getElementById("food-grid");
-
-  if (!levelLabel && !xpBar && !foodGrid) return;
-
-  if (levelLabel)
-    levelLabel.textContent = `Level ${level} — ${Math.round(pct)}% to next`;
-  if (xpBar) xpBar.style.width = pct + "%";
-
-  if (!foodGrid) return;
-  foodGrid.innerHTML = "";
-
-  const qualities = Progression.getQualities();
-
-  stash.forEach((item) => {
-    const q = qualities.find((q) => q.name === item.quality);
-    const div = document.createElement("div");
-    div.style.cssText = `
-      display: flex; align-items: center; justify-content: center;
-      cursor: grab;
-      width: 48px;
-      height: 48px;
-    `;
-    div.draggable = true;
-    div.dataset.id = item.id;
-
-    const img = document.createElement("img");
-    img.src = `assets/food/food_${item.type}.png`;
-    img.style.cssText = `
-      width: 100%; height: 100%;
-      object-fit: contain;
-      image-rendering: pixelated;
-      filter: drop-shadow(0 0 6px ${q.color});
-      pointer-events: none;
-    `;
-    div.appendChild(img);
-
-    // ── Mouse drag ──
-    div.addEventListener("dragstart", (e) => {
-      e.dataTransfer.setData("foodId", item.id);
-      const ghost = div.cloneNode(true);
-      ghost.style.position = "absolute";
-      ghost.style.top = "-200px";
-      document.body.appendChild(ghost);
-      e.dataTransfer.setDragImage(ghost, 24, 24);
-      setTimeout(() => document.body.removeChild(ghost), 0);
-      Dragon.setAnimation("anticipate_food", Infinity);
-    });
-
-    div.addEventListener("dragend", () => {
-      Dragon.setIdle();
-    });
-
-    // ── Touch drag ──
-    let touchClone = null;
-
-    div.addEventListener(
-      "touchstart",
-      (e) => {
-        const touch = e.touches[0];
-        touchClone = div.cloneNode(true);
-        touchClone.style.cssText = `
-        position: fixed;
-        width: 48px; height: 48px;
-        pointer-events: none;
-        z-index: 1000;
-        left: ${touch.clientX - 24}px;
-        top:  ${touch.clientY - 24}px;
-      `;
-        document.body.appendChild(touchClone);
-        Dragon.setAnimation("anticipate_food", Infinity);
-      },
-      { passive: true },
-    );
-
-    div.addEventListener(
-      "touchmove",
-      (e) => {
-        e.preventDefault();
-        const touch = e.touches[0];
-        if (touchClone) {
-          touchClone.style.left = `${touch.clientX - 24}px`;
-          touchClone.style.top = `${touch.clientY - 24}px`;
-        }
-      },
-      { passive: false },
-    );
-
-    div.addEventListener("touchend", async (e) => {
-      if (touchClone) {
-        document.body.removeChild(touchClone);
-        touchClone = null;
-      }
-
-      const touch = e.changedTouches[0];
-      const canvas = document.getElementById("petCanvas");
-      const rect = canvas.getBoundingClientRect();
-
-      if (
-        touch.clientX >= rect.left &&
-        touch.clientX <= rect.right &&
-        touch.clientY >= rect.top &&
-        touch.clientY <= rect.bottom
-      ) {
-        const removed = await Progression.removeFoodFromStash(item.id);
-        if (!removed) return;
-        const q2 = qualities.find((q) => q.name === removed.quality);
-        Dragon.setAnimation("chew", 2);
-        const didLevelUp = await Progression.addXP(q2.xp);
-        if (didLevelUp) Dragon.setAnimation("level_up", 1);
-        renderHome();
-      } else {
-        Dragon.setIdle();
-      }
-    });
-
-    foodGrid.appendChild(div);
-  });
-}
-
-function updateDragonMood() {
-  const index = window.activeEntryIndex ?? 49;
-  const record = DataLoader.getAll()[index];
-  if (record) Dragon.setMoodFromEfficiency(record.efficiency);
-}
-
-function renderPetVitals() {
-  const { level, foodHistory } = Progression.getState();
-  const qualities = Progression.getQualities();
-
-  const statusBox = document.getElementById("vitals-status-box");
-  const dragonImg = document.getElementById("vitals-dragon-img");
-  if (statusBox && dragonImg) {
-    const mode = Dragon.getMode();
-    const messages = {
-      normal: "Today Drago is feeling Normal",
-      tired: "Today Drago is feeling Tired",
-      energetic: "Today Drago is feeling Energetic",
-    };
-    statusBox.textContent = messages[mode] || messages.normal;
-    dragonImg.src = `assets/dragon/dragon-${mode || "normal"}.png`;
-  }
-
-  let pct = 0;
-  if (level >= 20) {
-    pct = 100;
-  } else if (level >= 10) {
-    pct = ((level - 10) / 10) * 100;
-  } else {
-    pct = ((level - 1) / 9) * 100;
-  }
-
-  const pctLabel = document.getElementById("evo-pct-label");
-  const fillRect = document.getElementById("evo-fill-rect");
-
-  if (pctLabel)
-    pctLabel.innerHTML = `${Math.round(pct)}<span style="font-size:16px;">%</span>`;
-  if (fillRect) {
-    const fillHeight = (pct / 100) * 160;
-    const y = 160 - fillHeight;
-    fillRect.setAttribute("y", y);
-    fillRect.setAttribute("height", fillHeight);
-  }
-
-  const tipEl = document.getElementById("vitals-tip");
-  if (tipEl) {
-    let tip = "";
-    if (level >= 20) {
-      tip =
-        "🎉 Your dragon has fully evolved! You're a sleep champion — keep it up!";
-    } else if (level >= 10) {
-      const remaining = 20 - level;
-      tip = `✨ Your dragon has evolved once! Just ${remaining} more level${remaining > 1 ? "s" : ""} until the final evolution. Better sleep means more food for Drago!`;
-    } else if (level >= 7) {
-      const remaining = 10 - level;
-      tip = `🔥 So close! Only ${remaining} more level${remaining > 1 ? "s" : ""} until your dragon evolves. Keep those sleep habits strong!`;
-    } else if (level >= 4) {
-      tip =
-        "😴 Your dragon is growing! Consistent sleep will help Drago reach the next evolution sooner than you think.";
-    } else {
-      tip =
-        "🌙 Your dragon's journey is just beginning. Good sleep tonight could bring Drago one step closer to evolving!";
-    }
-    tipEl.textContent = tip;
-  }
-
-  const grid = document.getElementById("food-history-grid");
-  const empty = document.getElementById("food-history-empty");
-  if (!grid) return;
-
-  grid.innerHTML = "";
-
-  if (foodHistory.length === 0) {
-    if (empty) empty.style.display = "block";
-    return;
-  }
-  if (empty) empty.style.display = "none";
-
-  foodHistory.forEach((item) => {
-    const q = qualities.find((q) => q.name === item.quality);
-    const div = document.createElement("div");
-    div.style.cssText =
-      "width:40px; height:40px; display:flex; align-items:center; justify-content:center;";
-    const img = document.createElement("img");
-    img.src = `assets/food/food_${item.type}.png`;
-    img.style.cssText = `
-      width: 100%; height: 100%;
-      object-fit: contain;
-      image-rendering: pixelated;
-      filter: drop-shadow(0 0 5px ${q.color});
-    `;
-    div.appendChild(img);
-    grid.appendChild(div);
   });
 }
 

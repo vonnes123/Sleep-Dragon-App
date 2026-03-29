@@ -1,44 +1,42 @@
-<h1>Remote Control</h1>
+<div>
 
-<div style="text-align:center; margin-bottom: 16px;">
-  <button id="btnGiveFood">🍖 Give Random Food</button>
-</div>
+  <div class="rc-section">
+    <button id="btnNextDayAdvance" class="btn-primary">🌅 Next Day</button>
+  </div>
 
-<div style="text-align:center; margin-bottom: 16px;">
-  <strong>Data Entry</strong>
-  <div style="margin-top: 8px;">
-    <button id="btnPrevDay">← Previous Day</button>
-    <span id="current-entry" style="margin: 0 12px; font-size: 13px;">Entry 50</span>
-    <button id="btnNextDay">Next Day →</button>
+  <div class="rc-section">
+    <button id="btnGiveFood" class="btn-default">🍖 Give Random Food</button>
   </div>
-</div>
 
-<div style="text-align:center; margin-bottom: 16px;">
-  <button id="btnNextDayAdvance" style="
-    background: #4f7cff;
-    color: white;
-    border: none;
-    padding: 10px 24px;
-    border-radius: 8px;
-    font-size: 14px;
-    font-weight: 600;
-    cursor: pointer;
-  ">🌅 Next Day</button>
-</div>
+  <div class="rc-section">
+    <div class="rc-title">Data Entry</div>
+    <div class="rc-entry-nav">
+      <button id="btnPrevDay" class="btn-default">← Prev</button>
+      <span id="current-entry" class="rc-entry-label">Entry 50</span>
+      <button id="btnNextDay" class="btn-default">Next →</button>
+    </div>
+  </div>
 
-<div style="text-align:center;">
-  <div>
-    <button data-mode="normal">Normal</button>
-    <button data-mode="tired">Tired</button>
-    <button data-mode="energetic">Energetic</button>
+  <div class="rc-section">
+    <div class="rc-title">Dragon Mode</div>
+    <div class="rc-btn-group">
+      <button class="btn-default" data-mode="normal">Normal</button>
+      <button class="btn-default" data-mode="tired">Tired</button>
+      <button class="btn-default" data-mode="energetic">Energetic</button>
+    </div>
   </div>
-  <div style="margin-top:8px;">
-    <button data-anim="fall_asleep" data-loops="1" data-next="sleep">Fall Asleep</button>
-    <button data-anim="wake_up"     data-loops="1">Wake Up</button>
-    <button data-anim="level_up"    data-loops="1">Level Up</button>
+
+  <div class="rc-section">
+    <div class="rc-title">Animations</div>
+    <div class="rc-btn-group">
+      <button class="btn-default" data-anim="fall_asleep" data-loops="1" data-next="sleep">Fall Asleep</button>
+      <button class="btn-default" data-anim="wake_up"     data-loops="1">Wake Up</button>
+      <button class="btn-default" data-anim="level_up"    data-loops="1">Level Up</button>
+    </div>
+    <div class="rc-btn-group" style="margin-top:8px;">
+      <button class="btn-default" data-anim="anticipate_food" data-loops="Infinity">Anticipating Food</button>
+      <button class="btn-default" data-anim="chew"            data-loops="2">Eating</button>
+    </div>
   </div>
-  <div style="margin-top:8px;">
-    <button data-anim="anticipate_food" data-loops="Infinity">Anticipating Food</button>
-    <button data-anim="chew"            data-loops="2">Eating</button>
-  </div>
+
 </div>

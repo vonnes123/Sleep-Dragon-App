@@ -1,61 +1,37 @@
-<div style="padding: 0 16px 24px;">
+<div class="report-subpage">
 
-  <div id="today-duration" style="font-size: 22px; font-weight: 700; margin-bottom: 12px; color: #111;"></div>
-
-  <div id="today-legend" style="margin-bottom: 10px;"></div>
-
-  <div style="position: relative; height: 200px; margin-bottom: 6px;">
+    <div class="section-header">Sleep</div>
+  <div id="today-duration" class="duration-header"></div>
+  <div id="today-legend" class="chart-legend"></div>
+  <div class="chart-wrap chart-wrap--md">
     <canvas id="chart-combined"></canvas>
   </div>
+  <div id="chart-subtitle" class="chart-subtitle"></div>
 
-  <div id="chart-subtitle" style="font-size: 10px; color: #aaa; margin-bottom: 16px; line-height: 1.4;"></div>
-
-  <div style="display: flex; gap: 16px; margin-bottom: 24px; flex-wrap: wrap;">
-    <div style="display:flex; align-items:center; gap:8px; cursor:pointer; font-size:13px; color:#333;">
+  <div class="toggle-row">
+    <div class="toggle-item">
       <div class="toggle-track on" id="track-stages"><div class="toggle-thumb"></div></div>
       Sleep Stages
     </div>
-    <div style="display:flex; align-items:center; gap:8px; cursor:pointer; font-size:13px; color:#333;">
+    <div class="toggle-item">
       <div class="toggle-track on" id="track-hrv"><div class="toggle-thumb"></div></div>
       HRV
     </div>
-    <div style="display:flex; align-items:center; gap:8px; cursor:pointer; font-size:13px; color:#333;">
+    <div class="toggle-item">
       <div class="toggle-track on" id="track-bpm"><div class="toggle-thumb"></div></div>
       BPM
     </div>
   </div>
 
-  <div style="font-size: 12px; color: #888; margin-bottom: 8px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em;">Sleep Stages</div>
-  <div style="position: relative; height: 240px; margin-bottom: 24px;">
+  <div class="section-header">Sleep Stages</div>
+  <div class="chart-wrap chart-wrap--xl">
     <canvas id="chart-donut"></canvas>
   </div>
 
-  <div id="quality-box" style="border: 1px solid #eee; border-radius: 14px; padding: 20px; background: #fafafa;">
-    <div id="quality-score" style="font-size: 36px; font-weight: 700; color: #111; margin-bottom: 6px;"></div>
-    <div id="quality-message" style="font-size: 14px; color: #555; line-height: 1.5;"></div>
+  <div class="section-header">Sleep Quality</div>
+  <div class="quality-card">
+    <div id="quality-score" class="quality-card__score"></div>
+    <div id="quality-message" class="quality-card__message"></div>
   </div>
 
 </div>
-
-<style>
-  .toggle-track {
-    width: 40px; height: 22px;
-    background: #ccc;
-    border-radius: 99px;
-    position: relative;
-    cursor: pointer;
-    transition: background 0.2s;
-    flex-shrink: 0;
-  }
-  .toggle-track.on { background: #4f7cff; }
-  .toggle-thumb {
-    width: 16px; height: 16px;
-    background: white;
-    border-radius: 50%;
-    position: absolute;
-    top: 3px; left: 3px;
-    transition: left 0.2s;
-    box-shadow: 0 1px 3px rgba(0,0,0,0.2);
-  }
-  .toggle-track.on .toggle-thumb { left: 21px; }
-</style>

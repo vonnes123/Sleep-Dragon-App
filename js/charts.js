@@ -1,6 +1,12 @@
 const Charts = (() => {
   const instances = {};
 
+  const CHART_THEME = {
+    tickColor: "#6b7fa8",
+    gridColor: "rgba(255, 255, 255, 0.06)",
+    labelColor: "#8899cc",
+  };
+
   function destroyChart(id) {
     if (instances[id]) {
       instances[id].destroy();
@@ -154,10 +160,10 @@ const Charts = (() => {
       if (!yScale || !xScale) return;
 
       const stageColors = {
-        0: "rgba(208, 223, 245, 0.5)",
-        1: "rgba(109, 168, 224, 0.6)",
-        2: "rgba(168, 196, 245, 0.5)",
-        3: "rgba(26,  58,  110, 0.7)",
+        0: "rgba(208, 223, 245, 0.25)",
+        1: "rgba(109, 168, 224, 0.45)",
+        2: "rgba(168, 196, 245, 0.35)",
+        3: "rgba(26,  58,  110, 0.80)",
       };
 
       const bottom = yScale.getPixelForValue(3.5);
@@ -169,7 +175,6 @@ const Charts = (() => {
         const x2 = meta.data[i + 1].x;
         const stage = data[i];
         const top = point.y;
-
         ctx.save();
         ctx.fillStyle = stageColors[stage] ?? "rgba(109,168,224,0.3)";
         ctx.fillRect(x1, top, x2 - x1, bottom - top);
@@ -200,7 +205,7 @@ const Charts = (() => {
             stepped: "before",
             tension: 0,
             fill: false,
-            borderColor: "rgba(109, 168, 224, 0.8)",
+            borderColor: "rgba(109, 168, 224, 0.6)",
             borderWidth: 1.5,
             pointRadius: 0,
             yAxisID: "yStage",
@@ -239,6 +244,11 @@ const Charts = (() => {
         plugins: {
           legend: { display: false },
           tooltip: {
+            backgroundColor: "rgba(20, 20, 40, 0.9)",
+            titleColor: "#eeeeff",
+            bodyColor: CHART_THEME.labelColor,
+            borderColor: "rgba(255,255,255,0.1)",
+            borderWidth: 1,
             callbacks: {
               label: (ctx) => {
                 if (ctx.dataset.label === "Sleep Stages") {
@@ -251,36 +261,24 @@ const Charts = (() => {
         },
         scales: {
           x: {
-            ticks: { maxTicksLimit: 8, color: "#888", font: { size: 10 } },
-            grid: { color: "rgba(0,0,0,0.05)" },
+            ticks: {
+              maxTicksLimit: 8,
+              color: CHART_THEME.tickColor,
+              font: { size: 10 },
+            },
+            grid: { color: CHART_THEME.gridColor },
           },
           yStage: {
             position: "left",
             min: -0.5,
             max: 3.5,
             reverse: true,
-            ticks: {
-              stepSize: 1,
-              font: { size: 10, weight: "600" },
-              callback: (v) =>
-                ["Wake", "REM", "Light", "Deep"][Math.round(v)] ?? "",
-              color: "#888",
-            },
-            grid: { color: "rgba(0,0,0,0.05)" },
+            display: false,
+            grid: { color: CHART_THEME.gridColor },
           },
           yRight: {
             position: "right",
-            title: {
-              display: true,
-              text: "HRV (ms) / BPM",
-              color: "#aaa",
-              font: { size: 10 },
-            },
-            ticks: {
-              font: { size: 10 },
-              color: "#888",
-              callback: (v) => v,
-            },
+            ticks: { font: { size: 10 }, color: CHART_THEME.tickColor },
             grid: { drawOnChartArea: false },
           },
         },
@@ -363,13 +361,18 @@ const Charts = (() => {
           legend: {
             position: "bottom",
             labels: {
-              color: "#555",
+              color: CHART_THEME.labelColor,
               font: { size: 11 },
               padding: 12,
               usePointStyle: true,
             },
           },
           tooltip: {
+            backgroundColor: "rgba(20, 20, 40, 0.9)",
+            titleColor: "#eeeeff",
+            bodyColor: CHART_THEME.labelColor,
+            borderColor: "rgba(255,255,255,0.1)",
+            borderWidth: 1,
             callbacks: { label: (ctx) => ` ${ctx.label}` },
           },
         },
@@ -378,18 +381,20 @@ const Charts = (() => {
         {
           id: "centerText",
           beforeDraw(chart) {
-            const { width, height, ctx } = chart;
+            const { ctx } = chart;
+            const centerX = (chart.chartArea.left + chart.chartArea.right) / 2;
+            const centerY = (chart.chartArea.top + chart.chartArea.bottom) / 2;
             ctx.save();
             const h = Math.floor(totalSleep / 60);
             const m = Math.round(totalSleep % 60);
-            ctx.fillStyle = "#111";
-            ctx.font = `bold ${Math.round(height / 8)}px sans-serif`;
+            ctx.fillStyle = "#eeeeff";
+            ctx.font = `bold 18px 'Space Grotesk', sans-serif`;
             ctx.textAlign = "center";
             ctx.textBaseline = "middle";
-            ctx.fillText(`${h}h ${m}m`, width / 2, height / 2 - 10);
-            ctx.fillStyle = "#888";
-            ctx.font = `${Math.round(height / 14)}px sans-serif`;
-            ctx.fillText("total sleep", width / 2, height / 2 + 14);
+            ctx.fillText(`${h}h ${m}m`, centerX, centerY - 8);
+            ctx.fillStyle = "#6b7fa8";
+            ctx.font = `12px 'Inter', sans-serif`;
+            ctx.fillText("total sleep", centerX, centerY + 12);
             ctx.restore();
           },
         },
@@ -397,7 +402,6 @@ const Charts = (() => {
     });
   }
 
-  // ── Weekly Sleep Stages + HRV + BPM ──
   function renderWeeklySleepChart(
     canvasId,
     weekDays,
@@ -516,6 +520,11 @@ const Charts = (() => {
         plugins: {
           legend: { display: false },
           tooltip: {
+            backgroundColor: "rgba(20, 20, 40, 0.9)",
+            titleColor: "#eeeeff",
+            bodyColor: CHART_THEME.labelColor,
+            borderColor: "rgba(255,255,255,0.1)",
+            borderWidth: 1,
             callbacks: {
               label: (ctx) => {
                 if (ctx.dataset.label === "HRV") return ` HRV: ${ctx.raw}ms`;
@@ -529,22 +538,22 @@ const Charts = (() => {
         },
         scales: {
           x: {
-            ticks: { color: "#888", font: { size: 10 } },
+            ticks: { color: CHART_THEME.tickColor, font: { size: 10 } },
             grid: { display: false },
           },
           y: {
             stacked: true,
             ticks: {
-              color: "#888",
+              color: CHART_THEME.tickColor,
               font: { size: 10 },
               callback: (v) => `${Math.floor(v / 60)}h`,
             },
-            grid: { color: "rgba(0,0,0,0.05)" },
+            grid: { color: CHART_THEME.gridColor },
           },
           yRight: {
             display: showHRV || showBPM,
             position: "right",
-            ticks: { color: "#888", font: { size: 10 } },
+            ticks: { color: CHART_THEME.tickColor, font: { size: 10 } },
             grid: { drawOnChartArea: false },
           },
         },
@@ -554,7 +563,7 @@ const Charts = (() => {
     instances[canvasId] = chart;
     return chart;
   }
-  // ── Weekly Bedtime Chart ──
+
   function renderWeeklyBedtimeChart(canvasId, weekDays) {
     destroyChart(canvasId);
     const canvas = document.getElementById(canvasId);
@@ -574,14 +583,12 @@ const Charts = (() => {
                 ? Math.round(d.bedtimeHour * 100) / 100
                 : null,
             ),
-            borderColor: weekDays.map((d) =>
-              d.isPrediction ? "#8B4513" : "#1a3a6e",
-            ),
+            borderColor: "#4f7cff",
             pointBackgroundColor: weekDays.map((d) =>
-              d.isPrediction ? "#8B4513" : "#1a3a6e",
+              d.isPrediction ? "#8B4513" : "#4f7cff",
             ),
             pointBorderColor: weekDays.map((d) =>
-              d.isPrediction ? "#8B4513" : "#1a3a6e",
+              d.isPrediction ? "#8B4513" : "#4f7cff",
             ),
             pointRadius: 5,
             pointBorderWidth: 0,
@@ -590,7 +597,9 @@ const Charts = (() => {
             spanGaps: true,
             segment: {
               borderColor: (ctx) =>
-                weekDays[ctx.p1DataIndex]?.isPrediction ? "#8B4513" : "#1a3a6e",
+                weekDays[ctx.p1DataIndex]?.isPrediction ? "#8B4513" : "#4f7cff",
+              borderDash: (ctx) =>
+                weekDays[ctx.p1DataIndex]?.isPrediction ? [4, 4] : [],
             },
           },
           {
@@ -601,9 +610,7 @@ const Charts = (() => {
                 Math.round((d.bedtimeHour + d.fellAsleepIn / 60) * 100) / 100
               );
             }),
-            borderColor: weekDays.map((d) =>
-              d.isPrediction ? "#FFB347" : "#a8c4f5",
-            ),
+            borderColor: "#a8c4f5",
             pointBackgroundColor: weekDays.map((d) =>
               d.isPrediction ? "#FFB347" : "#a8c4f5",
             ),
@@ -618,6 +625,8 @@ const Charts = (() => {
             segment: {
               borderColor: (ctx) =>
                 weekDays[ctx.p1DataIndex]?.isPrediction ? "#FFB347" : "#a8c4f5",
+              borderDash: (ctx) =>
+                weekDays[ctx.p1DataIndex]?.isPrediction ? [4, 4] : [],
             },
           },
         ],
@@ -629,6 +638,11 @@ const Charts = (() => {
         plugins: {
           legend: { display: false },
           tooltip: {
+            backgroundColor: "rgba(20, 20, 40, 0.9)",
+            titleColor: "#eeeeff",
+            bodyColor: CHART_THEME.labelColor,
+            borderColor: "rgba(255,255,255,0.1)",
+            borderWidth: 1,
             callbacks: {
               label: (ctx) => {
                 const h = ctx.raw;
@@ -643,12 +657,12 @@ const Charts = (() => {
         },
         scales: {
           x: {
-            ticks: { color: "#888", font: { size: 10 } },
+            ticks: { color: CHART_THEME.tickColor, font: { size: 10 } },
             grid: { display: false },
           },
           y: {
             ticks: {
-              color: "#888",
+              color: CHART_THEME.tickColor,
               font: { size: 10 },
               callback: (v) => {
                 const norm = v >= 24 ? v - 24 : v;
@@ -657,7 +671,7 @@ const Charts = (() => {
                 return `${String(hh).padStart(2, "0")}:${String(mm).padStart(2, "0")}`;
               },
             },
-            grid: { color: "rgba(0,0,0,0.05)" },
+            grid: { color: CHART_THEME.gridColor },
           },
         },
       },
@@ -667,7 +681,6 @@ const Charts = (() => {
     return chart;
   }
 
-  // ── Weekly Efficiency Histogram ──
   function renderWeeklyEfficiencyChart(canvasId, weekDays) {
     destroyChart(canvasId);
     const canvas = document.getElementById(canvasId);
@@ -678,7 +691,6 @@ const Charts = (() => {
       d.efficiency != null ? Math.round(d.efficiency * 10) / 10 : null,
     );
 
-    // Average includes all days with data (actual + predicted)
     const allVals = effData.filter((v) => v != null);
     const avg = allVals.length
       ? Math.round((allVals.reduce((s, v) => s + v, 0) / allVals.length) * 10) /
@@ -719,6 +731,11 @@ const Charts = (() => {
         plugins: {
           legend: { display: false },
           tooltip: {
+            backgroundColor: "rgba(20, 20, 40, 0.9)",
+            titleColor: "#eeeeff",
+            bodyColor: CHART_THEME.labelColor,
+            borderColor: "rgba(255,255,255,0.1)",
+            borderWidth: 1,
             callbacks: {
               label: (ctx) => {
                 if (ctx.dataset.label === "Average") return ` Avg: ${ctx.raw}%`;
@@ -729,25 +746,24 @@ const Charts = (() => {
         },
         scales: {
           x: {
-            ticks: { color: "#888", font: { size: 10 } },
+            ticks: { color: CHART_THEME.tickColor, font: { size: 10 } },
             grid: { display: false },
           },
           y: {
             min: 70,
             max: 100,
             ticks: {
-              color: "#888",
+              color: CHART_THEME.tickColor,
               font: { size: 10 },
               callback: (v) => `${v}%`,
             },
-            grid: { color: "rgba(0,0,0,0.05)" },
+            grid: { color: CHART_THEME.gridColor },
           },
         },
       },
     });
   }
 
-  // ── Monthly Sleep Stages + HRV + BPM ──
   function renderMonthlySleepChart(
     canvasId,
     monthDays,
@@ -886,6 +902,11 @@ const Charts = (() => {
         plugins: {
           legend: { display: false },
           tooltip: {
+            backgroundColor: "rgba(20, 20, 40, 0.9)",
+            titleColor: "#eeeeff",
+            bodyColor: CHART_THEME.labelColor,
+            borderColor: "rgba(255,255,255,0.1)",
+            borderWidth: 1,
             filter: (item) => item.raw != null,
             callbacks: {
               label: (ctx) => {
@@ -901,7 +922,7 @@ const Charts = (() => {
         scales: {
           x: {
             ticks: {
-              color: "#888",
+              color: CHART_THEME.tickColor,
               font: { size: 9 },
               callback: (val, i) => {
                 const day = monthDays[i]?.date;
@@ -916,16 +937,16 @@ const Charts = (() => {
           y: {
             stacked: true,
             ticks: {
-              color: "#888",
+              color: CHART_THEME.tickColor,
               font: { size: 10 },
               callback: (v) => `${Math.floor(v / 60)}h`,
             },
-            grid: { color: "rgba(0,0,0,0.05)" },
+            grid: { color: CHART_THEME.gridColor },
           },
           yRight: {
             display: showHRV || showBPM,
             position: "right",
-            ticks: { color: "#888", font: { size: 10 } },
+            ticks: { color: CHART_THEME.tickColor, font: { size: 10 } },
             grid: { drawOnChartArea: false },
           },
         },
@@ -936,7 +957,6 @@ const Charts = (() => {
     return chart;
   }
 
-  // ── Monthly Bedtime Chart ──
   function renderMonthlyBedtimeChart(canvasId, monthDays) {
     destroyChart(canvasId);
     const canvas = document.getElementById(canvasId);
@@ -1014,6 +1034,11 @@ const Charts = (() => {
         plugins: {
           legend: { display: false },
           tooltip: {
+            backgroundColor: "rgba(20, 20, 40, 0.9)",
+            titleColor: "#eeeeff",
+            bodyColor: CHART_THEME.labelColor,
+            borderColor: "rgba(255,255,255,0.1)",
+            borderWidth: 1,
             filter: (item) => item.raw != null,
             callbacks: {
               label: (ctx) => {
@@ -1030,7 +1055,7 @@ const Charts = (() => {
         scales: {
           x: {
             ticks: {
-              color: "#888",
+              color: CHART_THEME.tickColor,
               font: { size: 9 },
               callback: (val, i) => {
                 const day = monthDays[i]?.date;
@@ -1044,7 +1069,7 @@ const Charts = (() => {
           },
           y: {
             ticks: {
-              color: "#888",
+              color: CHART_THEME.tickColor,
               font: { size: 10 },
               callback: (v) => {
                 const norm = v >= 24 ? v - 24 : v;
@@ -1053,7 +1078,7 @@ const Charts = (() => {
                 return `${String(hh).padStart(2, "0")}:${String(mm).padStart(2, "0")}`;
               },
             },
-            grid: { color: "rgba(0,0,0,0.05)" },
+            grid: { color: CHART_THEME.gridColor },
           },
         },
       },
@@ -1063,7 +1088,6 @@ const Charts = (() => {
     return chart;
   }
 
-  // ── Monthly Efficiency Histogram ──
   function renderMonthlyEfficiencyChart(canvasId, monthDays) {
     destroyChart(canvasId);
     const canvas = document.getElementById(canvasId);
@@ -1116,6 +1140,11 @@ const Charts = (() => {
         plugins: {
           legend: { display: false },
           tooltip: {
+            backgroundColor: "rgba(20, 20, 40, 0.9)",
+            titleColor: "#eeeeff",
+            bodyColor: CHART_THEME.labelColor,
+            borderColor: "rgba(255,255,255,0.1)",
+            borderWidth: 1,
             filter: (item) => item.raw != null,
             callbacks: {
               label: (ctx) => {
@@ -1128,7 +1157,7 @@ const Charts = (() => {
         scales: {
           x: {
             ticks: {
-              color: "#888",
+              color: CHART_THEME.tickColor,
               font: { size: 9 },
               callback: (val, i) => {
                 const day = monthDays[i]?.date;
@@ -1144,11 +1173,11 @@ const Charts = (() => {
             min: 70,
             max: 100,
             ticks: {
-              color: "#888",
+              color: CHART_THEME.tickColor,
               font: { size: 10 },
               callback: (v) => `${v}%`,
             },
-            grid: { color: "rgba(0,0,0,0.05)" },
+            grid: { color: CHART_THEME.gridColor },
           },
         },
       },

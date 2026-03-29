@@ -1,37 +1,49 @@
-<div style="padding: 24px 20px; background: #fff; min-height: 100vh;">
+<div class="profile">
 
-  <!-- Avatar -->
-  <div style="display: flex; flex-direction: column; align-items: center; margin-bottom: 28px;">
-    <div style="
-      width: 80px; height: 80px;
-      border-radius: 50%;
-      border: 2px solid #ddd;
-      display: flex; align-items: center; justify-content: center;
-      margin-bottom: 10px;
-    ">
-      <svg viewBox="0 0 24 24" width="44" height="44" fill="none" stroke="#555" stroke-width="1.5">
+  <!-- Avatar section -->
+  <div class="profile__hero">
+    <div class="profile__avatar">
+      <svg viewBox="0 0 24 24" width="44" height="44" fill="none" stroke="var(--text-muted)" stroke-width="1.5">
         <circle cx="12" cy="8" r="4"/>
         <path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/>
       </svg>
     </div>
-    <div style="font-size: 14px; color: #333; font-weight: 600;">User123</div>
+    <div class="profile__name">User123</div>
+    <div class="profile__sub">Sleep Dragon Trainer</div>
   </div>
 
-  <!-- Days tooltip -->
-  <div style="
-    border: 1px solid #eee;
-    border-radius: 14px;
-    padding: 20px;
-    text-align: center;
-    font-size: 14px;
-    color: #555;
-    line-height: 1.6;
-    margin-bottom: 32px;
-  ">
-    <span id="profile-days-msg">Loading...</span>
+  <!-- Days card -->
+  <div class="profile__days-card">
+    <span id="profile-days-msg" class="profile__days-msg"></span>
   </div>
 
-  <!-- Settings placeholder -->
-  <div style="font-size: 15px; font-weight: 600; color: #333; margin-bottom: 16px;">Settings</div>
+  <!-- Settings -->
+  <div class="profile__section-title">Settings</div>
+  <div class="profile__settings-card">
+    <div class="profile__setting-row">
+      <span class="profile__setting-label">Notifications</span>
+      <span class="profile__setting-value">Coming soon</span>
+    </div>
+    <div class="profile__setting-divider"></div>
+    <div class="profile__setting-row">
+      <span class="profile__setting-label">Data Source</span>
+      <span class="profile__setting-value">Sleep_data_2022.csv</span>
+    </div>
+    <div class="profile__setting-divider"></div>
+    <div class="profile__setting-row">
+      <span class="profile__setting-label">Dragon Name</span>
+      <span class="profile__setting-value">Drago</span>
+    </div>
+    <div class="profile__setting-divider"></div>
+    <div class="profile__setting-row">
+      <span class="profile__setting-label">Sleep Goal</span>
+      <span class="profile__setting-value">8 hours</span>
+    </div>
+    <div class="profile__setting-divider"></div>
+    <div class="profile__setting-row">
+      <span class="profile__setting-label">Version</span>
+      <span class="profile__setting-value">0.1.0 — dev</span>
+    </div>
+  </div>
 
 </div>

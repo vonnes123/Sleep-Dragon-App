@@ -205,6 +205,85 @@ window.PageControllers = {
       });
     },
   },
+
+  "report-monthly": {
+    init() {
+      this.refresh();
+    },
+    refresh() {
+      const index = window.activeEntryIndex ?? 49;
+      const monthDays = Weekly.buildMonth(index);
+      if (!monthDays) return;
+
+      // Subtitle
+      const subEl = document.getElementById("monthly-sleep-subtitle");
+      if (subEl) {
+        const currentDate = new Date(DataLoader.getAll()[index].date);
+        const monthName = currentDate.toLocaleDateString("en-US", {
+          month: "long",
+          year: "numeric",
+        });
+        subEl.textContent = `${monthName} · Day ${index + 1} is last night · Max 7 days predicted ahead`;
+      }
+
+      // Efficiency average
+      const allEff = monthDays
+        .filter((d) => !d.isEmpty && d.efficiency != null)
+        .map((d) => d.efficiency);
+      const avgEff = allEff.length
+        ? Math.round((allEff.reduce((s, v) => s + v, 0) / allEff.length) * 10) /
+          10
+        : null;
+      const avgEl = document.getElementById("monthly-eff-avg");
+      if (avgEl && avgEff != null) {
+        avgEl.innerHTML = `Avg sleep efficiency so far (days 1–${index + 1})<br><strong style="font-size:20px;color:#111;">${avgEff}%</strong>`;
+      }
+
+      let showStages = true,
+        showHRV = true,
+        showBPM = true;
+
+      Charts.renderMonthlySleepChart(
+        "chart-monthly-sleep",
+        monthDays,
+        showStages,
+        showHRV,
+        showBPM,
+      );
+      Charts.renderMonthlyBedtimeChart("chart-monthly-bedtime", monthDays);
+      Charts.renderMonthlyEfficiencyChart(
+        "chart-monthly-efficiency",
+        monthDays,
+      );
+
+      const toggleState = { stages: true, hrv: true, bpm: true };
+      const trackIds = {
+        "mtrack-stages": "stages",
+        "mtrack-hrv": "hrv",
+        "mtrack-bpm": "bpm",
+      };
+
+      Object.entries(trackIds).forEach(([trackId, layerName]) => {
+        const track = document.getElementById(trackId);
+        if (!track) return;
+        track.addEventListener("click", () => {
+          toggleState[layerName] = !toggleState[layerName];
+          track.classList.toggle("on", toggleState[layerName]);
+          if (layerName === "stages") showStages = toggleState[layerName];
+          if (layerName === "hrv") showHRV = toggleState[layerName];
+          if (layerName === "bpm") showBPM = toggleState[layerName];
+          Charts.renderMonthlySleepChart(
+            "chart-monthly-sleep",
+            monthDays,
+            showStages,
+            showHRV,
+            showBPM,
+          );
+        });
+      });
+    },
+  },
+
   "remote-control": {
     init() {
       const channel = new BroadcastChannel("dragon_control");
@@ -271,6 +350,16 @@ window.PageControllers = {
     },
   },
 
+  profile: {
+    init() {
+      const days = (window.activeEntryIndex ?? 49) + 1;
+      const msgEl = document.getElementById("profile-days-msg");
+      if (msgEl) {
+        msgEl.textContent = `You have been taking care of Drago for ${days} days. Well Done!!!`;
+      }
+    },
+  },
+  
   report: {
     init() {
       const tabs = document.querySelectorAll(".report-tab");

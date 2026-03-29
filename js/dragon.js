@@ -132,12 +132,13 @@ const Dragon = (() => {
       renderHome();
     }
     if (type === "setEntry") {
-      // Store globally so report-today can pick it up
       window.activeEntryIndex = payload.index;
-      // If report-today is currently open, re-render it
-      if (window.PageControllers?.["report-today"]?.refresh) {
+      if (window.PageControllers?.["report-today"]?.refresh)
         window.PageControllers["report-today"].refresh();
-      }
+      if (window.PageControllers?.["report-weekly"]?.refresh)
+        window.PageControllers["report-weekly"].refresh();
+      if (window.PageControllers?.["report-monthly"]?.refresh)
+        window.PageControllers["report-monthly"].refresh();
     }
   };
 

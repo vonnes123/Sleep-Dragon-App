@@ -63,6 +63,13 @@ const Weekly = (() => {
       ? fellAsleepVals.reduce((s, v) => s + v, 0) / fellAsleepVals.length
       : null;
 
+    const bedtimeVals = similar
+      .map((r) => parseBedtimeHour(r.bedtime))
+      .filter((v) => v != null);
+    const avgBedtime = bedtimeVals.length
+      ? bedtimeVals.reduce((s, v) => s + v, 0) / bedtimeVals.length
+      : null;
+
     return {
       date: targetDate.toLocaleDateString("en-US", {
         weekday: "short",
@@ -78,14 +85,7 @@ const Weekly = (() => {
       sleepHRV: avgField(similar, "sleepHRV"),
       sleepBPM: avgField(similar, "sleepBPM"),
       efficiency: avgField(similar, "efficiency"),
-      bedtimeHour: (() => {
-        const vals = similar
-          .map((r) => parseBedtimeHour(r.bedtime))
-          .filter((v) => v != null);
-        return vals.length
-          ? vals.reduce((s, v) => s + v, 0) / vals.length
-          : null;
-      })(),
+      bedtimeHour: avgBedtime,
       fellAsleepIn: avgFellAsleep,
     };
   }
@@ -116,6 +116,7 @@ const Weekly = (() => {
       const isPast = key <= todayKey;
 
       if (isPast && byDateKey[key]) {
+        // Actual data exists
         const { record } = byDateKey[key];
         weekDays.push({
           date: day.toLocaleDateString("en-US", {
@@ -126,6 +127,7 @@ const Weekly = (() => {
           dateKey: key,
           weekday: day.toLocaleDateString("en-US", { weekday: "long" }),
           isPrediction: false,
+          isEmpty: false,
           isToday,
           asleep: record.asleep,
           deep: record.deep,
@@ -136,10 +138,12 @@ const Weekly = (() => {
           bedtimeHour: parseBedtimeHour(record.bedtime),
           fellAsleepIn: calcFellAsleepIn(record),
         });
-      } else {
+      } else if (isPast && !byDateKey[key]) {
+        // Past day with no data — predict from same weekday averages
         const pred = buildPrediction(records, day, activeIndex);
         if (pred) {
           pred.isToday = isToday;
+          pred.isEmpty = false;
           weekDays.push(pred);
         } else {
           weekDays.push({
@@ -151,6 +155,28 @@ const Weekly = (() => {
             dateKey: key,
             weekday: day.toLocaleDateString("en-US", { weekday: "long" }),
             isPrediction: true,
+            isEmpty: true,
+            isToday,
+          });
+        }
+      } else {
+        // Future day — predict
+        const pred = buildPrediction(records, day, activeIndex);
+        if (pred) {
+          pred.isToday = isToday;
+          pred.isEmpty = false;
+          weekDays.push(pred);
+        } else {
+          weekDays.push({
+            date: day.toLocaleDateString("en-US", {
+              weekday: "short",
+              month: "short",
+              day: "numeric",
+            }),
+            dateKey: key,
+            weekday: day.toLocaleDateString("en-US", { weekday: "long" }),
+            isPrediction: true,
+            isEmpty: true,
             isToday,
             asleep: null,
             deep: null,
@@ -186,6 +212,7 @@ const Weekly = (() => {
           dateKey: key,
           weekday: day.toLocaleDateString("en-US", { weekday: "long" }),
           isPrediction: false,
+          isEmpty: false,
           asleep: record.asleep,
           deep: record.deep,
           rem: Math.round(record.asleep * 0.25),
@@ -202,6 +229,101 @@ const Weekly = (() => {
     return weekDays;
   }
 
+  function buildMonth(activeIndex) {
+    const records = DataLoader.getAll();
+    const current = records[activeIndex];
+    if (!current) return null;
+
+    const currentDate = new Date(current.date);
+    const year = currentDate.getFullYear();
+    const month = currentDate.getMonth();
+    const todayKey = toDateKey(currentDate);
+    const lastDay = new Date(year, month + 1, 0).getDate();
+
+    const byDateKey = {};
+    records.forEach((r, i) => {
+      if (!r.date) return;
+      const key = toDateKey(new Date(r.date));
+      byDateKey[key] = { record: r, index: i };
+    });
+
+    const monthDays = [];
+
+    for (let d = 1; d <= lastDay; d++) {
+      const day = new Date(year, month, d);
+      const key = toDateKey(day);
+      const isToday = key === todayKey;
+      const isPast = key <= todayKey;
+      const dayDiff = Math.round((day - currentDate) / 86400000);
+
+      // More than 7 days ahead — leave empty
+      if (dayDiff > 7) {
+        monthDays.push({
+          date: d,
+          dateKey: key,
+          weekday: day.toLocaleDateString("en-US", { weekday: "long" }),
+          isEmpty: true,
+          isPrediction: false,
+          isToday,
+        });
+        continue;
+      }
+
+      if (isPast && byDateKey[key]) {
+        // Actual data exists
+        const { record } = byDateKey[key];
+        monthDays.push({
+          date: d,
+          dateKey: key,
+          weekday: day.toLocaleDateString("en-US", { weekday: "long" }),
+          isEmpty: false,
+          isPrediction: false,
+          isToday,
+          asleep: record.asleep,
+          deep: record.deep,
+          rem: Math.round(record.asleep * 0.25),
+          sleepHRV: record.sleepHRV,
+          sleepBPM: record.sleepBPM,
+          efficiency: record.efficiency,
+          bedtimeHour: parseBedtimeHour(record.bedtime),
+          fellAsleepIn: calcFellAsleepIn(record),
+        });
+      } else if (isPast && !byDateKey[key]) {
+        // Past day with no data — predict from same weekday averages
+        const pred = buildPrediction(records, day, activeIndex);
+        if (pred) {
+          monthDays.push({ ...pred, date: d, isToday, isEmpty: false });
+        } else {
+          monthDays.push({
+            date: d,
+            dateKey: key,
+            weekday: day.toLocaleDateString("en-US", { weekday: "long" }),
+            isEmpty: true,
+            isPrediction: true,
+            isToday,
+          });
+        }
+      } else {
+        // Future within prediction window
+        const pred = buildPrediction(records, day, activeIndex);
+        if (pred) {
+          monthDays.push({ ...pred, date: d, isToday, isEmpty: false });
+        } else {
+          monthDays.push({
+            date: d,
+            dateKey: key,
+            weekday: day.toLocaleDateString("en-US", { weekday: "long" }),
+            isEmpty: true,
+            isPrediction: true,
+            isToday,
+          });
+        }
+      }
+    }
+
+    return monthDays;
+  }
+
   function formatHour(h) {
     if (h == null) return "--";
     const norm = h >= 24 ? h - 24 : h;
@@ -210,7 +332,5 @@ const Weekly = (() => {
     return `${String(hh).padStart(2, "0")}:${String(mm).padStart(2, "0")}`;
   }
 
-
-  
-  return { buildWeek, formatHour };
+  return { buildWeek, buildMonth, formatHour };
 })();

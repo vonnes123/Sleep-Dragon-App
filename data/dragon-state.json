@@ -1,0 +1,46 @@
+{
+  "level": 7,
+  "xp": 450,
+  "stash": [
+    {
+      "id": 1774783649047.4155,
+      "type": "pizza",
+      "quality": "common"
+    },
+    {
+      "id": 1774783659897.909,
+      "type": "fish",
+      "quality": "common"
+    },
+    {
+      "id": 1774783660328.1458,
+      "type": "pizza",
+      "quality": "rare"
+    },
+    {
+      "id": 1774783660710.4006,
+      "type": "steak",
+      "quality": "legendary"
+    },
+    {
+      "id": 1774783661004.4067,
+      "type": "apple",
+      "quality": "common"
+    },
+    {
+      "id": 1774783661212.472,
+      "type": "steak",
+      "quality": "common"
+    },
+    {
+      "id": 1774783661423.838,
+      "type": "fish",
+      "quality": "rare"
+    },
+    {
+      "id": 1774783661636.432,
+      "type": "steak",
+      "quality": "rare"
+    }
+  ]
+}

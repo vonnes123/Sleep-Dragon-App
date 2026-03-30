@@ -35,13 +35,13 @@ window.PageControllers = {
         if (didLevelUp) Dragon.setAnimation("level_up", 1);
         renderHome();
       });
-    },
+    }
   },
 
   "pet-vitals": {
     init() {
       renderPetVitals();
-    },
+    }
   },
 
   profile: {
@@ -51,7 +51,7 @@ window.PageControllers = {
       if (msgEl) {
         msgEl.textContent = `You have been taking care of Drago for ${days} days. Well Done!!!`;
       }
-    },
+    }
   },
 
   "remote-control": {
@@ -68,7 +68,7 @@ window.PageControllers = {
           updateEntryLabel();
           channel.postMessage({
             type: "nextDay",
-            payload: { prevIndex: prevEntry, newIndex: currentEntry },
+            payload: { prevIndex: prevEntry, newIndex: currentEntry }
           });
         });
 
@@ -76,6 +76,14 @@ window.PageControllers = {
         const food = Progression.randomFood();
         channel.postMessage({ type: "addFood", payload: { food } });
       });
+
+      document
+        .getElementById("btnSendNotification")
+        .addEventListener("click", async () => {
+          const message = getNudgeMessage();
+          await sendSleepNudge();
+          channel.postMessage({ type: "nudge", payload: { message } });
+        });
 
       let currentEntry = window.activeEntryIndex ?? 49;
       const total = DataLoader.getAll().length;
@@ -95,7 +103,7 @@ window.PageControllers = {
         updateEntryLabel();
         channel.postMessage({
           type: "setEntry",
-          payload: { index: currentEntry },
+          payload: { index: currentEntry }
         });
       });
 
@@ -106,7 +114,7 @@ window.PageControllers = {
         updateEntryLabel();
         channel.postMessage({
           type: "setEntry",
-          payload: { index: currentEntry },
+          payload: { index: currentEntry }
         });
       });
 
@@ -114,7 +122,7 @@ window.PageControllers = {
         btn.addEventListener("click", () => {
           channel.postMessage({
             type: "setMode",
-            payload: { mode: btn.dataset.mode },
+            payload: { mode: btn.dataset.mode }
           });
         });
       });
@@ -128,11 +136,11 @@ window.PageControllers = {
           const next = btn.dataset.next || null;
           channel.postMessage({
             type: "setAnimation",
-            payload: { name: btn.dataset.anim, loops, next },
+            payload: { name: btn.dataset.anim, loops, next }
           });
         });
       });
-    },
+    }
   },
 
   report: {
@@ -142,7 +150,7 @@ window.PageControllers = {
 
       async function loadTab(tab) {
         tabs.forEach((t) =>
-          t.classList.toggle("active", t.dataset.tab === tab),
+          t.classList.toggle("active", t.dataset.tab === tab)
         );
         const res = await fetch(`pages/report-${tab}.html`);
         view.innerHTML = await res.text();
@@ -153,10 +161,10 @@ window.PageControllers = {
       }
 
       tabs.forEach((t) =>
-        t.addEventListener("click", () => loadTab(t.dataset.tab)),
+        t.addEventListener("click", () => loadTab(t.dataset.tab))
       );
       loadTab("today");
-    },
+    }
   },
 
   "report-today": {
@@ -218,7 +226,7 @@ window.PageControllers = {
       const trackIds = {
         "track-stages": "stages",
         "track-hrv": "hrv",
-        "track-bpm": "bpm",
+        "track-bpm": "bpm"
       };
 
       Object.entries(trackIds).forEach(([trackId, layerName]) => {
@@ -230,7 +238,7 @@ window.PageControllers = {
           Charts.toggleLayer(
             "chart-combined",
             layerName,
-            toggleState[layerName],
+            toggleState[layerName]
           );
           updateSubtitle();
         });
@@ -252,7 +260,7 @@ window.PageControllers = {
           msg = `Sleep efficiency was ${score}% — try to get to bed earlier.`;
         if (messageEl) messageEl.textContent = msg;
       }
-    },
+    }
   },
 
   "report-weekly": {
@@ -294,7 +302,7 @@ window.PageControllers = {
         weekDays,
         showStages,
         showHRV,
-        showBPM,
+        showBPM
       );
       Charts.renderWeeklyBedtimeChart("chart-weekly-bedtime", weekDays);
       Charts.renderWeeklyEfficiencyChart("chart-weekly-efficiency", weekDays);
@@ -303,7 +311,7 @@ window.PageControllers = {
       const trackIds = {
         "wtrack-stages": "stages",
         "wtrack-hrv": "hrv",
-        "wtrack-bpm": "bpm",
+        "wtrack-bpm": "bpm"
       };
 
       Object.entries(trackIds).forEach(([trackId, layerName]) => {
@@ -320,11 +328,11 @@ window.PageControllers = {
             weekDays,
             showStages,
             showHRV,
-            showBPM,
+            showBPM
           );
         });
       });
-    },
+    }
   },
 
   "report-monthly": {
@@ -339,7 +347,7 @@ window.PageControllers = {
       const currentDate = new Date(DataLoader.getAll()[index].date);
       const monthName = currentDate.toLocaleDateString("en-US", {
         month: "long",
-        year: "numeric",
+        year: "numeric"
       });
 
       const subEl = document.getElementById("monthly-sleep-subtitle");
@@ -372,19 +380,19 @@ window.PageControllers = {
         monthDays,
         showStages,
         showHRV,
-        showBPM,
+        showBPM
       );
       Charts.renderMonthlyBedtimeChart("chart-monthly-bedtime", monthDays);
       Charts.renderMonthlyEfficiencyChart(
         "chart-monthly-efficiency",
-        monthDays,
+        monthDays
       );
 
       const toggleState = { stages: true, hrv: true, bpm: true };
       const trackIds = {
         "mtrack-stages": "stages",
         "mtrack-hrv": "hrv",
-        "mtrack-bpm": "bpm",
+        "mtrack-bpm": "bpm"
       };
 
       Object.entries(trackIds).forEach(([trackId, layerName]) => {
@@ -401,13 +409,83 @@ window.PageControllers = {
             monthDays,
             showStages,
             showHRV,
-            showBPM,
+            showBPM
           );
         });
       });
-    },
-  },
+    }
+  }
 };
+
+const NUDGE_MESSAGES = {
+  common: [
+    "Drago is hungry. A better night's sleep tonight could mean better food tomorrow.",
+    "Drago is waiting. Rest well tonight and the quality of his meals could improve.",
+    "A quiet room and an early bedtime tonight could change what Drago gets to eat tomorrow."
+  ],
+  rare: [
+    "Drago noticed you rested well. Sleep a little longer tonight and the rewards could be even greater.",
+    "You are close to earning something better. An early night tonight could make the difference.",
+    "Drago is hopeful. A consistent bedtime tonight could bring a better reward tomorrow."
+  ],
+  epic: [
+    "Drago is thriving. Keep your sleep consistent tonight to maintain the quality of your rewards.",
+    "You are on a good streak. Protect your sleep tonight and Drago will be well fed tomorrow.",
+    "Drago trusts you. A calm evening and early rest could keep the rewards coming."
+  ],
+  legendary: [
+    "Drago is at his best. Protect your sleep tonight and the finest food could be yours tomorrow.",
+    "You are sleeping at your peak. One more good night could keep Drago at his happiest.",
+    "Drago is grateful. Stay consistent tonight and tomorrow's reward could be exceptional."
+  ]
+};
+
+function getNudgeMessage() {
+  const index = window.activeEntryIndex ?? 49;
+  const record = DataLoader.getAll()[index];
+  const quality = getQualityFromEfficiency(record?.efficiency);
+  const messages = NUDGE_MESSAGES[quality] ?? NUDGE_MESSAGES.common;
+  return messages[Math.floor(Math.random() * messages.length)];
+}
+
+function showToast(message) {
+  const toast = document.getElementById("toast");
+  const toastMsg = document.getElementById("toast-message");
+  if (!toast || !toastMsg) return;
+
+  toastMsg.textContent = message;
+  toast.classList.add("show");
+
+  setTimeout(() => toast.classList.remove("show"), 5000);
+}
+
+async function sendSleepNudge() {
+  const message = getNudgeMessage();
+
+  // Try browser notification first
+  if ("Notification" in window) {
+    if (Notification.permission === "granted") {
+      new Notification("Drago needs you", {
+        body: message,
+        icon: "assets/dragon/dragon-normal.png"
+      });
+      return;
+    }
+    if (Notification.permission !== "denied") {
+      const permission = await Notification.requestPermission();
+      if (permission === "granted") {
+        new Notification("Drago needs you", {
+          body: message,
+          icon: "assets/dragon/dragon-normal.png"
+        });
+        return;
+      }
+    }
+  }
+
+  // Fallback — in-app toast
+  showToast(message);
+}
 
 function renderHome() {
   const { level, xp, stash } = Progression.getState();

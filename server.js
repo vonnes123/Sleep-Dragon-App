@@ -8,10 +8,17 @@ const PORT = 8080;
 app.use(express.json());
 app.use(express.static("."));
 
-// Save dragon state back to JSON
+let isSavingState = false;
+let isSavingRatings = false;
+
 app.post("/save-state", (req, res) => {
+  if (isSavingState) {
+    return res.status(429).json({ ok: false, reason: "busy" });
+  }
+  isSavingState = true;
   const filePath = path.join(__dirname, "data", "dragon-state.json");
   fs.writeFile(filePath, JSON.stringify(req.body, null, 2), (err) => {
+    isSavingState = false;
     if (err) {
       console.error("[Server] Failed to save state:", err);
       return res.status(500).json({ ok: false });
@@ -22,8 +29,13 @@ app.post("/save-state", (req, res) => {
 });
 
 app.post("/save-ratings", (req, res) => {
+  if (isSavingRatings) {
+    return res.status(429).json({ ok: false, reason: "busy" });
+  }
+  isSavingRatings = true;
   const filePath = path.join(__dirname, "data", "sleep-ratings.json");
   fs.writeFile(filePath, JSON.stringify(req.body, null, 2), (err) => {
+    isSavingRatings = false;
     if (err) {
       console.error("[Server] Failed to save ratings:", err);
       return res.status(500).json({ ok: false });

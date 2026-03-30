@@ -24,13 +24,13 @@ const Dragon = (() => {
     fall_asleep: 8,
     sleep: 9,
     wake_up: 10,
-    level_up: 11,
+    level_up: 11
   };
 
   const IDLE_ROWS = {
     normal: "normal_idle",
     tired: "tired_idle",
-    energetic: "energetic_idle",
+    energetic: "energetic_idle"
   };
 
   function setAnimation(name, loops = Infinity, returnAnim = null) {
@@ -78,7 +78,7 @@ const Dragon = (() => {
       dx,
       dy,
       FRAME_SIZE,
-      FRAME_SIZE,
+      FRAME_SIZE
     );
   }
 
@@ -143,33 +143,37 @@ const Dragon = (() => {
       if (window.PageControllers?.["report-monthly"]?.refresh)
         window.PageControllers["report-monthly"].refresh();
     }
-if (type === "nextDay") {
-  const { prevIndex, newIndex } = payload;
-  window.activeEntryIndex = newIndex;
+    if (type === "nudge") {
+      if (typeof showToast === "function") showToast(payload.message);
+    }
+    if (type === "nextDay") {
+      const { prevIndex, newIndex } = payload;
+      window.activeEntryIndex = newIndex;
 
-  Dragon.setAnimation("fall_asleep", 1, "sleep");
+      Dragon.setAnimation("fall_asleep", 1, "sleep");
 
-  if (window.PageControllers?.["report-today"]?.refresh)
-    window.PageControllers["report-today"].refresh();
-  if (window.PageControllers?.["report-weekly"]?.refresh)
-    window.PageControllers["report-weekly"].refresh();
-  if (window.PageControllers?.["report-monthly"]?.refresh)
-    window.PageControllers["report-monthly"].refresh();
+      if (window.PageControllers?.["report-today"]?.refresh)
+        window.PageControllers["report-today"].refresh();
+      if (window.PageControllers?.["report-weekly"]?.refresh)
+        window.PageControllers["report-weekly"].refresh();
+      if (window.PageControllers?.["report-monthly"]?.refresh)
+        window.PageControllers["report-monthly"].refresh();
 
-  const isHomePage = !!document.getElementById("dragon-slot");
+      const isHomePage = !!document.getElementById("dragon-slot");
 
-  if (isHomePage) {
-    // On home — show directly, don't set pending
-    window._pendingPopup = null;
-    setTimeout(() => {
-      if (typeof showSleepPopup === "function")
-        showSleepPopup(prevIndex, newIndex);
-    }, 2000);
-  } else {
-    // Not on home — set pending for when home loads
-    window._pendingPopup = { prevIndex, newIndex };
-  }
-}
+      if (isHomePage) {
+        // On home — show directly, don't set pending
+        window._pendingPopup = null;
+        setTimeout(() => {
+          if (typeof showSleepPopup === "function")
+            showSleepPopup(prevIndex, newIndex);
+        }, 2000);
+      } else {
+        // Not on home — set pending for when home loads
+        window._pendingPopup = { prevIndex, newIndex };
+      }
+    }
+    1;
   };
 
   function getMode() {
@@ -195,6 +199,6 @@ if (type === "nextDay") {
     setAnimation,
     setIdle,
     setMoodFromEfficiency,
-    ANIMS,
+    ANIMS
   };
 })();

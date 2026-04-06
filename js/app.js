@@ -537,12 +537,21 @@ function renderHome() {
 
     div.addEventListener("dragstart", (e) => {
       e.dataTransfer.setData("foodId", item.id);
+
       const ghost = div.cloneNode(true);
-      ghost.style.position = "absolute";
-      ghost.style.top = "-200px";
+      ghost.style.cssText = `
+    position: absolute;
+    top: -200px;
+    left: -200px;
+    width: 64px;
+    height: 64px;
+    pointer-events: none;
+    opacity: 0.9;
+  `;
       document.body.appendChild(ghost);
-      e.dataTransfer.setDragImage(ghost, 24, 24);
+      e.dataTransfer.setDragImage(ghost, 32, 32);
       setTimeout(() => document.body.removeChild(ghost), 0);
+
       Dragon.setAnimation("anticipate_food", Infinity);
     });
 
@@ -567,7 +576,7 @@ function renderHome() {
         document.body.appendChild(touchClone);
         Dragon.setAnimation("anticipate_food", Infinity);
       },
-      { passive: true },
+      { passive: true }
     );
 
     div.addEventListener(
@@ -579,7 +588,7 @@ function renderHome() {
         touchClone.style.left = `${touch.clientX - 32}px`;
         touchClone.style.top = `${touch.clientY - 32}px`;
       },
-      { passive: false },
+      { passive: false }
     );
 
     div.addEventListener("touchend", async (e) => {
@@ -623,7 +632,7 @@ function renderPetVitals() {
     const messages = {
       normal: "Today Drago is feeling Normal",
       tired: "Today Drago is feeling Tired",
-      energetic: "Today Drago is feeling Energetic",
+      energetic: "Today Drago is feeling Energetic"
     };
     statusBox.textContent = messages[mode] || messages.normal;
     dragonImg.src = `assets/dragon/dragon-${mode || "normal"}.png`;
@@ -721,20 +730,20 @@ function showSleepPopup(prevEntryIndex, newEntryIndex) {
     common: "#B0B0B0",
     rare: "#3FA7FF",
     epic: "#9B59FF",
-    legendary: "#FF9C1A",
+    legendary: "#FF9C1A"
   };
   const qualityLabels = {
     common: "Common",
     rare: "Rare",
     epic: "Epic",
-    legendary: "Legendary",
+    legendary: "Legendary"
   };
 
   const color = qualityColors[quality];
   window._pendingFood = {
     type: foodType,
     quality,
-    id: Date.now() + Math.random(),
+    id: Date.now() + Math.random()
   };
 
   const eff = Math.round(record.efficiency ?? 0);

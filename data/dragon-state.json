@@ -1,19 +1,32 @@
 {
   "level": 9,
-  "xp": 265,
+  "xp": 500,
   "stash": [
     {
       "id": 1774863687108.7542,
       "type": "steak",
       "quality": "legendary"
+    }
+  ],
+  "foodHistory": [
+    {
+      "type": "fish",
+      "quality": "rare",
+      "id": 1775480515637.5247,
+      "eatenAt": 1775490813157
     },
     {
       "type": "fish",
       "quality": "epic",
-      "id": 1774867489999.539
-    }
-  ],
-  "foodHistory": [
+      "id": 1774867489999.539,
+      "eatenAt": 1775480613638
+    },
+    {
+      "type": "steak",
+      "quality": "legendary",
+      "id": 1775480539580.8015,
+      "eatenAt": 1775480558031
+    },
     {
       "id": 1774829081875.0266,
       "type": "steak",
@@ -67,24 +80,6 @@
       "type": "pizza",
       "quality": "legendary",
       "eatenAt": 1774862137588
-    },
-    {
-      "id": 1774829083510.152,
-      "type": "steak",
-      "quality": "epic",
-      "eatenAt": 1774862136035
-    },
-    {
-      "id": 1774829082223.3574,
-      "type": "apple",
-      "quality": "common",
-      "eatenAt": 1774862134882
-    },
-    {
-      "id": 1774829082460.8528,
-      "type": "steak",
-      "quality": "common",
-      "eatenAt": 1774862132946
     }
   ]
 }

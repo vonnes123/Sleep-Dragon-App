@@ -1255,7 +1255,10 @@ html, body {
   body {
     display: flex;
     justify-content: center;
-    background: #060610;
+    background: var(--bg-base);
+  }
+  #view-container {
+    max-width: 430px;
   }
 
   #app {
